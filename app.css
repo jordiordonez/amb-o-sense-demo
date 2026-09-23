@@ -284,9 +284,22 @@ details > div{padding-bottom:20px}
 .opt input:checked+span{border:2px solid var(--blau);background:var(--sel);padding:11px 15px}
 .opt input:focus-visible+span{outline:3px solid var(--enllac);outline-offset:3px}
 .opt input:disabled+span{cursor:default}
-.opt.ok span{border:2px solid var(--blau);padding:11px 15px}
-.opt.ok span::after{content:" · Resposta del document";font-weight:700;color:var(--blau)}
-.feedback{margin-top:16px;padding:14px 16px;border-radius:var(--r-ctl);background:var(--fons);border:1px solid var(--sep)}
+/* Correcció del test: únic lloc amb verd i vermell (estil.md D15). Sempre amb icona i text. */
+:root{--ok:#1D6B3A;--ok-f:#E9F4EC;--ko:#A12C2C;--ko-f:#FBEDEC}
+.opt .ico{display:inline-block;vertical-align:-4px;margin-right:10px;flex:none}
+.opt .badge{display:block;font-style:normal;font-size:15px;line-height:22px;font-weight:700;margin-top:2px}
+.opt.ok span,.opt.ok input:checked+span{border:2px solid var(--ok);background:var(--ok-f);padding:11px 15px}
+.opt.ok .ico,.opt.ok .badge{color:var(--ok)}
+.opt.ko span,.opt.ko input:checked+span{border:2px solid var(--ko);background:var(--ko-f);padding:11px 15px}
+.opt.ko .ico,.opt.ko .badge{color:var(--ko)}
+.opt input:disabled:not(:checked)+span{color:var(--text2)}
+.opt.ok input:disabled+span,.opt.ko input:disabled+span{color:var(--text)}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:var(--r-ctl);background:var(--fons);border:1px solid var(--sep);border-left-width:4px}
+.feedback.ok{border-left-color:var(--ok)}
+.feedback.ok b{color:var(--ok)}
+.feedback.ko{border-left-color:var(--ko)}
+.feedback.ko b{color:var(--ko)}
+@media (prefers-reduced-motion:no-preference){.feedback{animation:fb .18s ease-out}@keyframes fb{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}}
 
 /* Llistes i textos */
 .list{padding-left:22px}
@@ -296,12 +309,30 @@ details > div{padding-bottom:20px}
 .card{background:#fff;border:1px solid var(--sep);border-radius:var(--r-card);padding:24px;margin-bottom:20px}
 .card h2{font-size:22px;line-height:30px;margin-bottom:12px}
 
-/* Peu */
-footer.foot{background:#fff;border-top:1px solid var(--sep);padding:32px 0;font-size:15px;line-height:22px;color:var(--text2)}
-footer.foot .cols{display:grid;gap:20px}
-@media (min-width:800px){footer.foot .cols{grid-template-columns:2fr 1fr 1fr}}
-footer.foot a{color:var(--enllac)}
-footer.foot ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+/* Peu: bloc blau institucional (#293E6B), text blanc 10,5:1, text secundari #C9D8F0 7,3:1 */
+footer.foot{background:var(--blau);color:#fff;margin-top:64px;padding:48px 0 0;font-size:16px;line-height:24px}
+footer.foot a{color:#fff;text-underline-offset:3px}
+footer.foot a:hover{text-decoration-thickness:2px}
+footer.foot :focus-visible{outline-color:#fff}
+.foot-top{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.22)}
+.foot-brand{max-width:560px}
+.foot-brand .brand{color:#fff;font-size:24px;line-height:30px}
+.foot-brand .brand .mark{width:36px;height:26px}
+.foot-brand p{margin:12px 0 0;color:#C9D8F0;font-size:18px;line-height:28px}
+.foot-cta{display:inline-flex;align-items:center;min-height:48px;padding:10px 20px;border-radius:var(--r-ctl);background:#fff;color:var(--blau)!important;font-weight:700;text-decoration:none}
+.foot-cta:hover{background:var(--sel)}
+.foot-cols{display:grid;gap:28px;padding:32px 0}
+@media (min-width:800px){.foot-cols{grid-template-columns:repeat(3,1fr)}}
+.foot-cols h2{font-size:14px;line-height:20px;letter-spacing:.06em;text-transform:uppercase;color:#C9D8F0;margin:0 0 12px}
+.foot-cols ul{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.foot-cols li a{display:inline-flex;align-items:center;min-height:40px}
+.foot-note{margin:8px 0 0;color:#C9D8F0;font-size:15px;line-height:22px;max-width:320px}
+.foot-bottom{background:#1F3157;padding:20px 0;font-size:14px;line-height:21px;color:#C9D8F0}
+.foot-bottom .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;align-items:center;justify-content:space-between}
+.foot-bottom p{margin:0}
+.foot-bottom b{color:#fff;font-weight:700}
+.foot-meta{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.pill{border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px;color:#fff}
 
 /* Notes de disseny (mode presentació) */
 .dnote{display:none}
@@ -322,6 +353,10 @@ body.notes .dnote{display:block;border:1px dashed #8A6A2E;background:#FFFBF0;col
   .qcard,.result,.card,.coverage{break-inside:avoid;border-color:#999}
   main{padding:0}
   a{color:#000}
+  footer.foot{background:#fff;color:#000;margin-top:24px;padding-top:12px;border-top:1px solid #999}
+  .foot-top,.foot-cols{display:none}
+  .foot-bottom{background:none;color:#000;padding:0}
+  .foot-bottom b,.pill,footer.foot a{color:#000}
 }
 
 [tabindex="-1"]:focus{outline:none}

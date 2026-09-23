@@ -20,6 +20,10 @@ const SC = {amb:"Amb Acord", sense:"Sense Acord"};
 const mark = (cls="mark")=>`<svg class="${cls}" viewBox="0 0 30 22" aria-hidden="true"><path d="M6.5 6V1.5h17V6" fill="none" stroke="currentColor" stroke-width="2"/><rect x="1" y="7" width="11" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="18" y="7" width="11" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
 const glyph = side=>`<svg class="glyph" viewBox="0 0 30 22" aria-hidden="true"><rect x="1" y="4" width="11" height="16" rx="2" fill="${side==="amb"?"currentColor":"none"}" stroke="currentColor" stroke-width="2"/><rect x="18" y="4" width="11" height="16" rx="2" fill="${side==="sense"?"currentColor":"none"}" stroke="currentColor" stroke-width="2"/></svg>`;
 const check = `<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4"/></svg>`;
+const ico = {
+  ok:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`,
+  ko:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`
+};
 const note = (d,txt)=>`<aside class="dnote" aria-label="Nota de disseny"><b>${esc(d)}</b> · ${txt}</aside>`;
 
 /* ---------- Components ---------- */
@@ -248,13 +252,16 @@ P.test = ()=>{
   ${it.map((x,k)=>{const Q=D.test[x.tema][x.i];const nm=`t${k}`;
     return `<section class="tq" aria-labelledby="tq${k}"><span class="eyebrow">${esc(tema(x.tema).nom)} · ${k+1} de ${it.length}</span><h2 id="tq${k}">${esc(Q.q)}</h2>
     <fieldset><legend class="sr">Respostes</legend><div class="opts">
-    ${[...Q.o,"No ho sé"].map((o,j)=>{const val=j<Q.o.length?j:-1;return `<label class="opt ${x.done&&val===Q.c?"ok":""}"><input type="radio" name="${nm}" value="${val}" data-test="${k}" ${x.ans===val?"checked":""} ${x.done?"disabled":""}><span>${esc(o)}</span></label>`}).join("")}
+    ${[...Q.o,"No ho sé"].map((o,j)=>{const val=j<Q.o.length?j:-1;
+      const doc=x.done&&val===Q.c, teva=x.done&&x.ans===val&&val!==Q.c&&val!==-1;
+      const marca=doc?`<em class="badge">${x.ans===val?"La teva resposta · ":""}Resposta del document</em>`:teva?`<em class="badge">La teva resposta</em>`:"";
+      return `<label class="opt ${doc?"ok":teva?"ko":""}"><input type="radio" name="${nm}" value="${val}" data-test="${k}" ${x.ans===val?"checked":""} ${x.done?"disabled":""}><span>${doc?ico.ok:teva?ico.ko:""}${esc(o)}${marca}</span></label>`}).join("")}
     </div></fieldset>
-    ${x.done?`<div class="feedback" role="status"><p style="margin:0 0 6px"><b>Segons el document, la resposta és: ${esc(Q.o[Q.c])}.</b></p><p style="margin:0 0 6px">${esc(Q.e)}</p><a href="#/q/${Q.ref}">Llegeix la pregunta ${Q.ref}</a></div>`
+    ${x.done?`<div class="feedback ${x.ans===Q.c?"ok":x.ans===-1?"":"ko"}" role="status"><p style="margin:0 0 6px"><b>${x.ans===Q.c?"Coincideix amb el document.":x.ans===-1?"Cap problema: aquí tens la resposta.":"No coincideix amb el document."}</b> Segons el document, la resposta és: ${esc(Q.o[Q.c])}.</p><p style="margin:0 0 6px">${esc(Q.e)}</p><a href="#/q/${Q.ref}">Llegeix la pregunta ${Q.ref}</a></div>`
       :`<div class="actions" style="margin-top:14px"><button class="btn sec" data-act="test-check" data-k="${k}" ${x.ans===null?"disabled":""}>Comprova</button></div>`}
     </section>`}).join("")}
   ${done.length===it.length?`<div class="card" role="status"><h2>Has respost segons el document ${ok} de ${it.length}.</h2><p>Pots tornar a llegir els temes on has dubtat.</p><div class="actions"><button class="btn" data-act="test-new">Fes un altre test</button><a class="btn sec" href="#/temes">Torna als temes</a></div></div>`:""}
-  ${note("D15","Preguntes sobre contingut verificable, amb «No ho sé», explicació i font. Sense cronòmetre, rànquing ni confeti. Persones amb opinions diferents poden encertar-les igual.")}
+  ${note("D15","Preguntes sobre contingut verificable, amb «No ho sé», explicació i font. Sense cronòmetre, rànquing ni confeti. Verd i vermell només aquí, per a la correcció, i sempre amb icona i text: no depèn del color. Als escenaris no s'hi fan servir mai.")}
 </div>`;
 };
 
