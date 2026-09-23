@@ -99,41 +99,67 @@ function calc(){
 /* ---------- Pàgines ---------- */
 const P = {};
 
+const arrow = '<span aria-hidden="true">↗</span>';
+const topicIcons = {
+  habitatge:'<path d="m3 11 9-8 9 8M5 10v11h5v-7h4v7h5V10"/>',
+  treball:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 12c5 4 13 4 18 0M10 14h4"/>',
+  sobirania:'<path d="m3 8 9-5 9 5H3ZM5 11v7m7-7v7m7-7v7M3 21h18"/>'
+};
+const topicIcon = id=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${topicIcons[id]||topicIcons.sobirania}</svg>`;
+const topicHooks = {habitatge:"Residents, inversió i habitatge",treball:"Drets laborals i feina a Europa",sobirania:"Les lleis i qui les decideix"};
+let searchTerm = "";
+const normalize = s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function searchForm(value=""){
+  return `<form class="search-form" role="search"><label class="sr" for="question-search">Cerca entre les preguntes de la demo</label><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="question-search" name="question" type="search" maxlength="120" placeholder="Què vols saber? P. ex. feina, residents, lleis…" value="${esc(value)}"><button class="btn" type="submit">Cerca ${arrow}</button></form>`;
+}
+
 P.inici = ()=>`
-<div class="wrap">
-  <div class="hero">
-    <div>
-      <span class="eyebrow">Servei informatiu del Govern d'Andorra</span>
-      <h1 tabindex="-1">Què canviaria en els temes que t'importen?</h1>
-      <p class="lead">Compara els escenaris amb i sense Acord d'associació Andorra–UE. Tria els teus temes, llegeix els dos escenaris i consulta les fonts.</p>
-      <div class="actions"><a class="btn" href="#/situacio">Tria els teus temes</a><a class="btn sec" href="#/temes/explora">Explora tots els àmbits</a></div>
-      <p class="small muted" style="margin-top:14px">Si vols, afegeix la teva valoració. És opcional.</p>
-      <ul class="promises">
-        <li>${mark()}<span>Pots començar per un tema i continuar quan vulguis.</span></li>
-        <li>${mark()}<span>No et demanem cap dada per llegir o comparar.</span></li>
-        <li>${mark()}<span>Cada resposta porta la seva font, amb document i article.</span></li>
-      </ul>
-      ${note("D02 · D08","Portada funcional: una pregunta, dues entrades igual de completes, i una comparativa real just a sota. Sense il·lustració a pantalla completa.")}
+<div class="home">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="overline"><span class="tiny-mark" aria-hidden="true">↔</span> L'Acord d'associació Andorra–UE</p>
+        <h1 id="home-title" tabindex="-1">L'Acord.<br>A la <em>teva vida.</em></h1>
+        <p class="hero-intro">Què canviaria? Què es mantindria?<br>Compara els dos escenaris i forma't el teu criteri.</p>
+        <a class="hero-link" href="#/situacio">Troba els temes que t'afecten <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-topics">
+        <div class="section-kicker"><span>COMENÇA PEL QUE T'IMPORTA</span><span>01 — 03</span></div>
+        ${actius().map((t,i)=>`<a class="topic-entry" href="#/tema/${t.id}"><span class="topic-icon">${topicIcon(t.id)}</span><span class="topic-entry-text"><b>${esc(t.nom)}</b><span>${esc(topicHooks[t.id])}</span></span><span class="topic-arrow" aria-hidden="true">↗</span></a>`).join("")}
+        <a class="all-topics" href="#/temes/explora">Explora els 15 àmbits <span>3 disponibles a la demo →</span></a>
+      </div>
     </div>
-    <div>
-      <div class="sample-label"><span class="eyebrow" style="margin:0">Exemple real de comparativa</span><a class="small" href="#/tema/treball">Tot el tema Treball</a></div>
+    <div class="wrap hero-bottom"><span>Una pregunta. Dos escenaris. <b>El teu criteri.</b></span><a href="#/privacitat">Sense registre. Les teves tries es queden aquí. ${arrow}</a></div>
+  </section>
+
+  <div class="wrap">
+    <section class="find-question" aria-label="Troba una pregunta">${searchForm()}<p>Cerca en les 11 preguntes d'Habitatge, Treball i Sobirania.</p></section>
+    <section class="home-comparison" aria-labelledby="example-title">
+      <div class="section-heading"><div><span class="overline">DE LA PREGUNTA ALS FETS</span><h2 id="example-title">Posa els dos escenaris<br>l'un al costat de l'altre.</h2></div><p>Aquí tens un exemple.<br>La font original, sempre a un clic.</p></div>
       ${qcard(preg("T3"))}
-    </div>
+      ${note("D02 · D08", "Els temes són accessibles a la primera pantalla. L'exemple conserva els textos, les fonts i el mateix tractament visual per als dos escenaris.")}
+    </section>
+    <section class="next-steps" aria-label="Continua explorant">
+      <a href="#/no-canvia"><span class="step-number">01 / ENTÉN</span><h2>I què no canviaria?</h2><p>També hi ha punts que es mantenen en tots dos escenaris.</p><span class="step-link">Mira què es mantindria ${arrow}</span></a>
+      <a href="#/test"><span class="step-number">02 / COMPROVA</span><h2>Ho tens clar?</h2><p>Posa a prova el que has entès. Amb explicacions i fonts.</p><span class="step-link">Prova el test ${arrow}</span></a>
+      <a href="#/balanc"><span class="step-number">03 / VALORA, SI VOLS</span><h2>El balanç és teu.</h2><p>Tu decideixes què t'importa i com valores cada escenari.</p><span class="step-link">Construeix el teu balanç ${arrow}</span></a>
+    </section>
+    <section class="proces" aria-labelledby="pr">
+      <div class="section-heading"><div><span class="overline">EL CONTEXT</span><h2 id="pr">On som del procés?</h2></div><p>Revisat el ${esc(D.revisio)}.<br>Font: <a href="https://www.andorraue.ad/ca/" rel="noopener">andorraue.ad</a></p></div>
+      <ol>${D.proces.map(p=>`<li class="${p[2]}"><time>${esc(p[0])}</time>${esc(p[1])}<div class="estat">${p[2]==="fet"?"Fet":"Previst"}</div></li>`).join("")}</ol>
+      ${note("D05 · E08","Signatura, ratificació i entrada en vigor es distingeixen. Cap compte enrere.")}
+    </section>
   </div>
-
-  <section class="quick" aria-labelledby="qk">
-    <h2 id="qk">Comença per un tema</h2>
-    <div class="quick-grid">${actius().map(t=>`<a href="#/tema/${t.id}"><span class="eyebrow" style="margin:0">${esc(t.familia)}</span><b>${esc(t.nom)}</b><span class="small muted">${esc(t.frase)} · ${pregsDe(t.id).length} preguntes</span></a>`).join("")}</div>
-    ${note("D08","Els tres temes del prototip. Serveixen per provar varietat de contingut: quotidià, professional i institucional. No s'afirma que siguin els principals.")}
-  </section>
-
-  <section class="proces" aria-labelledby="pr">
-    <h2 id="pr">On som del procés</h2>
-    <p class="small muted" style="margin:4px 0 0">Estat contrastat a ${esc(D.revisio)}. Font: andorraue.ad.</p>
-    <ol>${D.proces.map(p=>`<li class="${p[2]}"><time>${esc(p[0])}</time>${esc(p[1])}<div class="estat">${p[2]==="fet"?"Fet":"Previst"}</div></li>`).join("")}</ol>
-    ${note("D05 · E08","La data i l'estat del procés formen part del contingut. Signatura, ratificació i entrada en vigor es distingeixen. Cap compte enrere.")}
-  </section>
 </div>`;
+
+P.cerca = ()=>{
+  const terms=normalize(searchTerm).trim().split(/\s+/).filter(Boolean);
+  const matches=terms.length?D.preguntes.filter(q=>{
+    const haystack=normalize([tema(q.tema).nom,q.pregunta,q.context,q.amb.text,q.sense.text,...q.amb.qual.map(x=>x.text),...q.sense.qual.map(x=>x.text)].join(" "));
+    return terms.every(t=>haystack.includes(t));
+  }):D.preguntes;
+  return `<div class="wrap narrow"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a> / Cerca</div><span class="overline">DE LA PREGUNTA ALS FETS</span><h1 tabindex="-1">Què vols saber?</h1><p>Cerca entre les 11 preguntes disponibles en aquesta demo.</p></div>${searchForm(searchTerm)}<p class="search-count" role="status">${matches.length} ${matches.length===1?"pregunta trobada":"preguntes trobades"}</p><div class="search-results">${matches.map(q=>`<a href="#/q/${q.id}"><span class="overline">${esc(tema(q.tema).nom)} · ${q.id}</span><h2>${esc(q.pregunta)}</h2><span class="step-link">Compara els escenaris ${arrow}</span></a>`).join("")||`<div class="card"><h2>No hem trobat cap pregunta.</h2><p>Prova una paraula més general, com «feina», «residents» o «lleis». La demo només inclou tres temes.</p><a href="#/temes/explora">Explora els àmbits disponibles →</a></div>`}</div></div>`;
+};
 
 P.situacio = ()=>{
   const prop = new Set(); S.sit.forEach(i=>D.situacions[i].temes.forEach(t=>prop.add(t)));
@@ -185,7 +211,8 @@ P.tema = (id)=>{
   </nav>
   <div>
     <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a> · <a href="#/temes">Temes</a> · ${esc(t.familia)}</div>
-      <h1 tabindex="-1">${esc(t.nom)}</h1><p class="intro">${esc(t.intro)}</p></div>
+      <span class="topic-heading-icon">${topicIcon(t.id)}</span><h1 tabindex="-1">${esc(t.nom)}</h1><p class="intro">${esc(t.intro)}</p><span class="topic-meta">${qs.length} preguntes · Dos escenaris · Fonts consultables</span></div>
+    <details class="question-index"><summary>Les ${qs.length} preguntes d’aquest tema</summary><div><ol>${qs.map(q=>`<li><a href="#/tema/${id}/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ol></div></details>
     <div class="valtoggle"><label class="switch"><input type="checkbox" data-act="val" ${S.val?"checked":""}><span class="trk"></span><span><b>Afegeix la teva valoració</b> <span class="muted">· opcional</span></span></label>
       <span class="small muted">${S.val?"Pots deixar qualsevol punt pendent.":"Llegir i comparar ja és una experiència completa."}</span></div>
     ${note("D12","Llegir no exigeix puntuar. La capa de valoració s'activa expressament. Importància per tema, valoració independent de cada escenari, cap resposta preseleccionada.")}
@@ -368,7 +395,7 @@ function copy(text){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,()=>fallback());}else fallback();
   function fallback(){const i=document.createElement("textarea");i.value=text;i.style.position="fixed";i.style.opacity="0";document.body.appendChild(i);i.select();try{document.execCommand("copy");done();}catch(e){toast("Copia aquest enllaç: "+text);}i.remove();}
 }
-function reset(){S.temes.clear();S.sit.clear();S.val=false;S.imp={};S.rat={};S.vistes.clear();S.revisar.clear();S.test=null;toast("Fet. No queda res guardat.");}
+function reset(){searchTerm="";S.temes.clear();S.sit.clear();S.val=false;S.imp={};S.rat={};S.vistes.clear();S.revisar.clear();S.test=null;toast("Fet. No queda res guardat.");}
 
 /* ---------- Router ---------- */
 function route(){
@@ -376,6 +403,7 @@ function route(){
   let html,cur;
   switch(h[0]){
     case "":cur="";html=P.inici();break;
+    case "cerca":cur="";html=P.cerca();break;
     case "situacio":cur="temes";html=P.situacio();break;
     case "temes":cur="temes";html=P.temes(h[1]);break;
     case "tema":cur="temes";html=P.tema(h[1]);break;
@@ -391,15 +419,23 @@ function route(){
   }
   closeSrc();
   const mb=$(".menu-btn");if(mb){mb.setAttribute("aria-expanded","false");$("#menu").classList.remove("open");}
+  $("#app").classList.toggle("home-main",h[0]==="");
   $("#app").innerHTML=html;
+  document.title=(h[0]===""?"Amb o sense · L’Acord, a la teva vida":($("#app h1")?.textContent||"Amb o sense")+" · Amb o sense");
   $$(".top nav a").forEach(a=>{if(a.dataset.nav===cur)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   if(h[0]==="tema"&&h[2]){const el=$("#q-"+h[2]);if(el){el.scrollIntoView();$("#h-"+h[2]).focus({preventScroll:true});return;}}
   window.scrollTo(0,0);
   const f=$("#app h1");if(f)f.focus({preventScroll:true});
 }
-function rerender(keepScroll=true){const y=window.scrollY;const a=document.activeElement;const key=a&&(a.dataset.rate||a.dataset.imp)?(a.name+"|"+a.value):null;route();if(keepScroll)window.scrollTo(0,y);if(key){const [n,v]=key.split("|");const el=$(`input[name="${n}"][value="${v}"]`);if(el)el.focus({preventScroll:true});}}
+function rerender(keepScroll=true){const y=window.scrollY;const a=document.activeElement;const key=a&&(a.dataset.rate||a.dataset.imp||a.dataset.test!==undefined)?(a.name+"|"+a.value):null;const focusId=a?.id;const focusAct=a?.dataset.act;route();if(keepScroll)window.scrollTo(0,y);if(key){const [n,v]=key.split("|");const el=$(`input[name="${n}"][value="${v}"]`);if(el)el.focus({preventScroll:true});}else if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(focusAct==="inclou"){$('input[data-act="inclou"]')?.focus({preventScroll:true});}}
 
 /* ---------- Esdeveniments ---------- */
+document.addEventListener("submit",e=>{
+  if(!e.target.matches(".search-form"))return;
+  e.preventDefault();
+  searchTerm=new FormData(e.target).get("question").trim().slice(0,120);
+  if(location.hash==="#/cerca")route();else location.hash="#/cerca";
+});
 document.addEventListener("click",e=>{
   const src=e.target.closest("[data-src]");if(src){openSrc(src.dataset.src);return;}
   const a=e.target.closest("[data-act]");if(!a)return;
