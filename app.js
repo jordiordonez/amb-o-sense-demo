@@ -10,7 +10,7 @@ const preg = id=>D.preguntes.find(q=>q.id===id);
 const pregsDe = id=>D.preguntes.filter(q=>q.tema===id);
 const actius = ()=>D.temes.filter(t=>t.actiu);
 
-const S = {temes:new Set(), sit:new Set(), val:false, imp:{}, rat:{}, vistes:new Set(), revisar:new Set(), test:null, inclouVal:true};
+const S = {temes:new Set(), sit:new Set(), val:false, imp:{}, rat:{}, vistes:new Set(), revisar:new Set(), test:null, export:{detail:true,extras:false,personal:true}};
 const IMP = ["Cap","Poca","Mitjana","Molta"];
 const VAL = ["Molt desfavorable","Desfavorable","Ni favorable ni desfavorable","Favorable","Molt favorable"];
 const VALN = [0,2.5,5,7.5,10];
@@ -27,17 +27,19 @@ const ico = {
 const note = (d,txt)=>`<aside class="dnote" aria-label="Nota de disseny"><b>${esc(d)}</b> · ${txt}</aside>`;
 
 /* ---------- Components ---------- */
+function responseBody(s){
+    const tab = s.taula?`<table class="minitab"><caption>${esc(s.taula.titol)}</caption><tbody>${s.taula.files.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("")}</tbody></table><p class="note-src">${esc(s.taula.nota)}</p>`:"";
+    const quals = s.qual.map(x=>`<div class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</div>`).join("");
+  return `<p class="resp">${esc(s.text)}</p>${tab}${quals}<div class="tags" aria-label="Naturalesa de la informació">${s.naturalesa.map(n=>`<span class="tag nat">${esc(n)}</span>`).join("")}</div>`;
+}
 function qcard(q,{standalone=false}={}){
   const t = tema(q.tema);
   const H = standalone?"h1":"h2";
   const scen = side=>{
     const s=q[side];
-    const tab = s.taula?`<table class="minitab"><caption>${esc(s.taula.titol)}</caption><tbody>${s.taula.files.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("")}</tbody></table><p class="note-src">${esc(s.taula.nota)}</p>`:"";
-    const quals = s.qual.map(x=>`<div class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</div>`).join("");
     return `<section class="scen" aria-label="${SC[side]}">
       <h4>${glyph(side)}${SC[side]}</h4>
-      <p class="resp">${esc(s.text)}</p>${tab}${quals}
-      <div class="tags" aria-label="Naturalesa de la informació">${s.naturalesa.map(n=>`<span class="tag nat">${esc(n)}</span>`).join("")}</div>
+      ${responseBody(s)}
       <button class="btn sec srcbtn" data-src="${q.id}:${side}">Consulta la font<span class="sr"> de «${SC[side]}»: ${esc(q.pregunta)}</span></button>
     </section>`;
   };
@@ -201,7 +203,7 @@ P.temes = (mode)=>{
 
 P.tema = (id)=>{
   const t=tema(id); if(!t||!t.actiu) return P.nf();
-  const qs=pregsDe(id); qs.forEach(q=>S.vistes.add(q.id));
+  const qs=pregsDe(id);
   const sel=[...S.temes].filter(x=>tema(x).actiu); const seq=sel.includes(id)?sel:[id,...sel];
   const nxt=seq[seq.indexOf(id)+1];
   return `<div class="wrap"><div class="tema-layout">
@@ -221,13 +223,13 @@ P.tema = (id)=>{
     ${note("D09 · D10","Una pregunta, dos escenaris visibles amb la mateixa jerarquia. En mòbil s'apilen i repeteixen l'etiqueta. La naturalesa de cada afirmació és textual; les condicions i terminis no s'amaguen.")}
     <div class="nextnav">
       ${nxt?`<a class="btn" href="#/tema/${nxt}">Següent tema: ${esc(tema(nxt).nom)}</a>`:`<a class="btn" href="#/${S.val?"balanc":"test"}">${S.val?"Veure el teu balanç":"Comprova què has entès"}</a>`}
-      <a class="btn sec" href="#/resum">El teu recorregut</a>
+      ${S.val&&!nxt?"":'<a class="btn sec" href="#/balanc">El teu balanç</a>'}
     </div>
   </div></div></div>`;
 };
 
 P.pregunta = (id)=>{
-  const q=preg(id); if(!q) return P.nf(); S.vistes.add(id);
+  const q=preg(id); if(!q) return P.nf();
   return `<div class="wrap narrow" style="max-width:1000px">
   <div class="crumbs"><a href="#/">Amb o sense</a> · <a href="#/tema/${q.tema}">${esc(tema(q.tema).nom)}</a></div>
   <p class="small muted" style="margin:0 0 16px">Comparativa dels escenaris amb i sense Acord d'associació Andorra–UE. Servei informatiu del Govern d'Andorra. Revisat el ${esc(D.revisio)}.</p>
@@ -237,23 +239,61 @@ P.pregunta = (id)=>{
 </div>`;
 };
 
+const hasRating = q=>["amb","sense"].some(side=>S.rat[q.id]?.[side]!==undefined);
+const completeRating = q=>["amb","sense"].every(side=>typeof S.rat[q.id]?.[side]==="number");
+const ratingLabel = value=>value===undefined?"Pendent":value==="ns"?"Encara no ho sé":VAL[value];
+function relevantQuestions(){
+  return D.preguntes.filter(q=>S.temes.has(q.tema)||S.imp[q.tema]!==undefined||hasRating(q)||S.vistes.has(q.id)||S.revisar.has(q.id));
+}
+function importanceText(id){
+  const imp=S.imp[id];
+  return imp===undefined?"Importància pendent: aquest tema no entra al resultat general.":imp===0?"Importància: Cap. Aquest tema no entra al resultat general.":"Importància que li has donat: "+IMP[imp]+".";
+}
+function graphSummary(c,{links=true}={}){
+  const general=c.gen?`<section class="result general"><h2>Resultat general</h2><p class="imp-note">Ponderat per la importància de ${c.gen.n} ${c.gen.n===1?"tema":"temes"}.</p>${bars(c.gen.amb,c.gen.sense)}</section>`:c.complet?`<p class="coverage partial">No hi ha resultat general: cap tema amb una parella completa té una importància superior a «Cap». ${links?'<a href="#/temes">Revisa els temes i la seva importància</a>.':""}</p>`:"";
+  return general+c.temes.filter(t=>t.n).sort((a,b)=>D.temes.findIndex(t=>t.id===a.id)-D.temes.findIndex(t=>t.id===b.id)).map(t=>`<section class="result"><h3>${esc(t.nom)}</h3><p class="imp-note">${importanceText(t.id)} ${t.n} de ${t.total} preguntes valorades en tots dos escenaris.</p>${bars(t.amb,t.sense)}${links?`<a class="small" href="#/tema/${t.id}" data-act="val-on-nav">Revisa les valoracions de ${esc(t.nom)}</a>`:""}</section>`).join("");
+}
+function questionDetail(q,{detail=false,personal=true,links=true}={}){
+  const r=S.rat[q.id]||{};
+  return `<article class="rating-item" data-question="${q.id}"><h3>${esc(q.pregunta)}</h3>
+    ${detail&&q.context?`<p class="qctx">${esc(q.context)}</p>`:""}
+    ${detail&&q.igual?'<p class="igual">Igual en tots dos escenaris</p>':""}
+    <div class="rating-pair">${["amb","sense"].map(side=>`<section class="rating-scenario"><h4>${SC[side]}</h4>${detail?responseBody(q[side]):""}${personal?`<p class="personal-rating"><span>La teva valoració</span><b>${ratingLabel(r[side])}</b></p>`:""}${detail?`<div class="report-sources"><b>Fonts</b><ul>${q[side].fonts.map(f=>{const d=D.docs[f.doc];return `<li>${esc(d.nom)} · ${esc(f.loc)}${d.fitxer?` · <a href="${esc(d.fitxer)}#page=${f.page}">PDF, pàgina ${f.page}</a>`:" · Document de treball, sense enllaç públic."}${f.nota?`<br>${esc(f.nota)}`:""}</li>`;}).join("")}</ul></div>`:""}</section>`).join("")}</div>
+    ${detail&&q.mante?`<p class="mante"><b>Què es mantindria</b>${esc(q.mante)}</p>`:""}
+    ${detail&&q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}
+    ${personal&&!completeRating(q)?'<p class="rating-status">Aquesta pregunta no entra al càlcul: cal valorar tots dos escenaris. «Encara no ho sé» no és una valoració numèrica.</p>':""}
+    ${links?`<a class="small" href="#/q/${q.id}" data-act="val-on-nav">Revisa la pregunta i modifica la valoració →</a>`:""}
+  </article>`;
+}
+function groupedDetails(qs,opts={}){
+  return actius().map(t=>{const items=qs.filter(q=>q.tema===t.id);return items.length?`<section class="rating-topic"><div class="rating-topic-head"><h2>${esc(t.nom)}</h2>${opts.personal===false?"":`<p>${importanceText(t.id)}</p>`}</div>${items.map(q=>questionDetail(q,opts)).join("")}</section>`:"";}).join("");
+}
+function questionList(qs){return `<ul class="list">${qs.map(q=>`<li><a href="#/q/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ul>`;}
+function exportQuestions(){
+  const rated=D.preguntes.filter(hasRating);
+  const base=rated.length?rated:D.preguntes.filter(q=>S.vistes.has(q.id));
+  const ids=new Set(base.map(q=>q.id));
+  if(S.export.extras)relevantQuestions().filter(q=>!completeRating(q)||S.revisar.has(q.id)).forEach(q=>ids.add(q.id));
+  return D.preguntes.filter(q=>ids.has(q.id));
+}
+function exportReport(){
+  const qs=exportQuestions(), c=calc(), personal=S.export.personal;
+  return `<div class="export-document ${S.export.detail?"document-full":"document-brief"}"><header class="report-heading"><p class="overline">AMB O SENSE · ACORD D'ASSOCIACIÓ ANDORRA–UE</p><h1>${personal?"El teu balanç personal":"Dossier de consulta"}</h1><p>Generat el ${new Date().toLocaleDateString("ca-AD",{day:"numeric",month:"long",year:"numeric"})}. Continguts revisats el ${esc(D.revisio)}.</p><p class="report-disclaimer">Proposta de Solucions Digitals JOA. No és un servei oficial. Continguts pendents de validació.</p><p class="small">${S.export.detail?"Amb les respostes dels dos escenaris, matisos i fonts.":"Resum breu de les preguntes."} ${personal?"Les valoracions són personals; no són una previsió ni una recomanació.":"Sense valoracions, importàncies ni gràfiques personals."}</p></header>
+    ${personal&&c.complet?`<p class="coverage">${c.complet} de ${c.total} preguntes valorades en tots dos escenaris. Les incompletes i «Encara no ho sé» no compten.</p>${graphSummary(c,{links:false})}`:""}
+    ${qs.length?groupedDetails(qs,{detail:S.export.detail,personal,links:false}):'<p>Encara no hi ha preguntes per incloure. Consulta una pregunta, afegeix una valoració o inclou les pendents.</p>'}
+    <footer class="report-footer"><h2>Documents de referència</h2><ul>${Object.values(D.docs).map(d=>`<li><b>${esc(d.nom)}.</b> ${esc(d.autor)}. ${esc(d.versio)}</li>`).join("")}</ul><p>Els textos són resums de consulta. Les fonts originals permeten comprovar-ne el context i l'abast.</p></footer></div>`;
+}
 P.balanc = ()=>{
-  const c=calc();
-  const partial=c.complet<c.total;
-  const cov = c.complet===0
-    ? `<div class="coverage"><p style="margin:0 0 12px"><b>Encara no has completat cap parella de valoracions.</b></p><p style="margin:0 0 16px">Una parella és una pregunta valorada en tots dos escenaris. Sense cap parella no hi ha resultat, ni tampoc empat.</p><a class="btn" href="#/tema/${[...S.temes][0]||"habitatge"}" data-act="val-on-nav">Comença a valorar</a></div>`
-    : `<div class="coverage ${partial?"partial":""}"><p style="margin:0"><b>Has valorat ${c.complet} de ${c.total} parelles dels teus temes.</b>${partial?" Resultat parcial: les preguntes pendents i les marcades amb «Encara no ho sé» no compten.":""}</p></div>`;
-  const gen = c.gen?`<section class="result general" aria-labelledby="rg"><h2 id="rg">Resultat general</h2><p class="imp-note">Ponderat per la importància que has donat a ${c.gen.n===1?"1 tema":c.gen.n+" temes"}.</p>${bars(c.gen.amb,c.gen.sense)}</section>`
-    : (c.complet?`<div class="coverage partial"><p style="margin:0">Per veure el resultat general, indica la importància dels temes que has valorat.</p></div>`:"");
-  const per = c.temes.filter(t=>t.n).map(t=>`<section class="result" aria-labelledby="rt-${t.id}"><h3 id="rt-${t.id}">${esc(t.nom)}</h3>
-    <p class="imp-note">${t.imp===undefined?"Importància pendent: aquest tema no entra al resultat general.":t.imp===0?"Importància «Cap»: aquest tema no entra al resultat general.":"Importància: "+IMP[t.imp]+"."} ${t.n} de ${t.total} parelles valorades.</p>${bars(t.amb,t.sense)}
-    <p class="small" style="margin:10px 0 0"><a href="#/tema/${t.id}">Revisa les valoracions de ${esc(t.nom)}</a></p></section>`).join("");
-  return `<div class="wrap narrow">
-  <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">El teu balanç personal</h1>
-  <p>Aquest resultat resumeix les teves valoracions. Pots revisar-les.</p></div>
-  ${cov}${gen}${per}
-  ${c.complet?`<p class="stable">No és una previsió, ni una probabilitat, ni una recomanació. Dues notes altes o dues notes baixes són possibles: cada escenari es valora per separat.</p>`:""}
-  ${note("D13","Dues barres independents, mateixa escala 0–10, mateix color, valor escrit. Primer la cobertura, després els resultats. Sense guanyador, sense balança, sense 5/10 per defecte.")}
+  const c=calc(), rated=D.preguntes.filter(hasRating), seen=D.preguntes.filter(q=>S.vistes.has(q.id));
+  const review=D.preguntes.filter(q=>S.revisar.has(q.id));
+  const pending=relevantQuestions().filter(q=>!completeRating(q)&&!S.revisar.has(q.id));
+  return `<div class="wrap narrow balance-page"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">El teu balanç</h1><p>Les teves valoracions, les preguntes consultades i el que vols revisar, en un sol lloc.</p><p class="small">Aquest balanç només es conserva mentre tens la pàgina oberta. Pots desar-ne una còpia en PDF.</p></div>
+    ${c.complet?`<div class="coverage ${c.complet<c.total?"partial":""}"><b>Has valorat ${c.complet} de ${c.total} preguntes en tots dos escenaris.</b> ${c.complet<c.total?'Resultat parcial: les incompletes i «Encara no ho sé» no compten.':""}</div>`:`<div class="coverage"><h2>${rated.length?"Encara no hi ha cap parella completa":"Pots fer el teu balanç quan vulguis"}</h2><p>${rated.length?"Les teves respostes apareixen a sota. Per calcular un resultat, cal una valoració numèrica en tots dos escenaris d'una pregunta.":"Aquí pots recuperar les preguntes consultades i les marcades per revisar. Valorar-les és opcional."}</p><a class="btn sec" href="#/tema/${[...S.temes][0]||seen[0]?.tema||"habitatge"}" data-act="val-on-nav">${rated.length?"Continua valorant":"Comença a valorar, si vols"}</a></div>`}
+    ${graphSummary(c)}
+    ${c.complet?'<p class="stable">Aquest resultat només reflecteix les teves valoracions. No és una previsió, una probabilitat ni una recomanació.</p>':""}
+    ${rated.length?`<section class="rating-details" aria-labelledby="rating-title"><div class="section-heading"><div><span class="overline">PREGUNTA PER PREGUNTA</span><h2 id="rating-title">Les teves valoracions</h2></div></div>${groupedDetails(rated)}</section>`:""}
+    ${seen.length?`<details ${rated.length?"":"open"}><summary>Preguntes consultades (${seen.length})</summary><div><p class="small muted">Preguntes que has tingut en pantalla. Això no implica que n'hagis llegit totes les respostes.</p>${questionList(seen)}</div></details>`:""}
+    ${review.length||pending.length?`<details><summary>Per continuar: pendents i marcades per revisar</summary><div>${review.length?`<h2>Marcades per revisar</h2>${questionList(review)}`:""}${pending.length?`<h2>Pendents o «Encara no ho sé»</h2>${questionList(pending)}`:""}</div></details>`:""}
   <details><summary>Com s'ha construït?</summary><div class="method">
     <ol><li>Cada valoració es converteix en un número: molt desfavorable 0, desfavorable 2,5, ni favorable ni desfavorable 5, favorable 7,5, molt favorable 10.</li>
     <li>Només compten les preguntes valorades en tots dos escenaris. «Encara no ho sé» i les pendents no compten, i no es converteixen en un 5.</li>
@@ -263,9 +303,14 @@ P.balanc = ()=>{
     <p><b>Exemple.</b> Dos temes donen 8 i 4 al mateix escenari, amb importància «Molta» i «Poca». El resultat és 7, perquè el primer compta tres vegades i el segon una.</p>
     <table><thead><tr><th>Tema</th><th>Importància</th><th class="n">Nota</th><th class="n">Pes</th></tr></thead><tbody><tr><td>Tema A</td><td>Molta</td><td class="n">8</td><td class="n">3</td></tr><tr><td>Tema B</td><td>Poca</td><td class="n">4</td><td class="n">1</td></tr><tr><td colspan="2"><b>Resultat</b></td><td class="n"><b>7</b></td><td class="n">(8×3 + 4×1) / 4</td></tr></tbody></table>
     <p class="small muted" style="margin:0">Aquesta conversió numèrica és una convenció de l'eina, no una mesura de l'impacte de l'Acord.</p></div></details>
-  <div class="actions no-print" style="margin-top:8px"><a class="btn" href="#/resum">Descarrega el resum</a><a class="btn sec" href="#/temes">Continua llegint</a><button class="btn link" data-act="esborra">Esborra les meves valoracions</button></div>
+  <div class="actions no-print"><a class="btn" href="#/exporta">Imprimeix o desa en PDF</a><a class="btn sec" href="#/temes">Continua llegint</a><button class="btn link" data-act="esborra">Esborra-ho tot</button></div>
 </div>`;
 };
+
+P.exporta = ()=>`<div class="wrap narrow export-page"><div class="export-controls no-print"><div class="crumbs"><a href="#/balanc">← Torna al teu balanç</a></div><h1 tabindex="-1">Prepara el teu document</h1><p>Tria el detall i revisa la previsualització abans d'imprimir o desar en PDF.</p><fieldset class="export-level"><legend>Quin detall vols incloure?</legend><label class="export-option"><input type="radio" name="export-detail" id="export-brief" data-export="detail" value="brief" ${S.export.detail?"":"checked"}><span><b>Resum breu</b><small>Preguntes i valoracions, amb les gràfiques i la importància dels temes.</small></span></label><label class="export-option"><input type="radio" name="export-detail" id="export-full" data-export="detail" value="full" ${S.export.detail?"checked":""}><span><b>Amb les respostes · Recomanada</b><small>També els textos dels dos escenaris, les condicions, els matisos i les fonts.</small></span></label></fieldset>
+    <label class="export-check"><input type="checkbox" id="export-extras" data-export="extras" ${S.export.extras?"checked":""}><span>Inclou les preguntes pendents i les marcades per revisar.</span></label>
+    <label class="export-check"><input type="checkbox" id="export-personal" data-export="personal" ${S.export.personal?"checked":""}><span>Inclou les meves valoracions personals.</span></label><p class="small muted">Si ho desmarques, també s'exclouen les gràfiques i les importàncies personals. Sense valoracions fetes, s'inclouen les preguntes consultades.</p>
+    <p class="export-count" role="status">${exportQuestions().length} preguntes al document.</p><button class="btn" data-act="print" ${exportQuestions().length?"":"disabled"}>Imprimeix o desa en PDF</button><p class="small muted">S'obrirà el diàleg d'impressió del navegador. Per obtenir un PDF, tria «Desa com a PDF».</p><h2 class="preview-label">Previsualització del document</h2></div>${exportReport()}</div>`;
 
 P.test = ()=>{
   if(!S.test){
@@ -292,26 +337,8 @@ P.test = ()=>{
 </div>`;
 };
 
-P.resum = ()=>{
-  const c=calc();
-  const temes=c.temes.length?c.temes.map(t=>t.nom):[...S.temes].map(x=>tema(x).nom);
-  const vistes=[...S.vistes].map(preg);
-  const rev=[...S.revisar].map(preg);
-  const pend=D.preguntes.filter(q=>c.temes.some(t=>t.id===q.tema)).filter(q=>{const r=S.rat[q.id]||{};return !(typeof r.amb==="number"&&typeof r.sense==="number");});
-  return `<div class="wrap narrow">
-  <div class="pagehead"><div class="crumbs no-print"><a href="#/">Inici</a></div><h1 tabindex="-1">El teu recorregut</h1>
-  <p>Resum personal generat en aquest dispositiu el ${new Date().toLocaleDateString("ca-AD",{day:"numeric",month:"long",year:"numeric"})}. Text de referència: Acord aprovat pel Consell de la UE, juliol de 2026 (traducció no oficial). Continguts revisats el ${esc(D.revisio)}.</p></div>
-  <div class="card"><h2>Temes</h2>${temes.length?`<p style="margin:0">${temes.map(esc).join(" · ")}</p>`:`<p class="muted" style="margin:0">Encara no has triat cap tema.</p>`}</div>
-  <div class="card"><h2>Preguntes que has consultat</h2>${vistes.length?`<ul class="list">${vistes.map(q=>`<li><a href="#/q/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Cap encara.</p>`}
-  ${rev.length?`<h2 style="margin-top:16px">Marcades per revisar</h2><ul class="list">${rev.map(q=>`<li><a href="#/q/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ul>`:""}</div>
-  ${c.complet?`<div class="card"><h2>El teu balanç</h2><label class="switch no-print" style="margin-bottom:12px"><input type="checkbox" data-act="inclou" ${S.inclouVal?"checked":""}><span class="trk"></span><span>Inclou les meves valoracions al document</span></label>
-    ${S.inclouVal?(c.gen?`<p style="margin:0 0 4px"><b>Resultat general</b> · ${c.complet} de ${c.total} parelles valorades</p>${bars(c.gen.amb,c.gen.sense)}`:`<p>Resultat per tema al balanç. Falta indicar importàncies per al resultat general.</p>`)+`<p class="small muted" style="margin-top:12px">Aquest resultat només reflecteix les teves valoracions. No és una previsió ni una recomanació.</p>`:`<p class="muted" style="margin:0">Les valoracions no s'inclouran.</p>`}</div>`:""}
-  ${pend.length&&c.temes.length?`<div class="card"><h2>Pendents o «Encara no ho sé»</h2><ul class="list">${pend.map(q=>`<li>${esc(q.pregunta)}</li>`).join("")}</ul></div>`:""}
-  <div class="card"><h2>Fonts</h2><ul class="list"><li>${esc(D.docs.quadre.nom)}. ${esc(D.docs.quadre.autor)}.</li><li>${esc(D.docs.AM.nom)}. ${esc(D.docs.AM.versio)}.</li><li>${esc(D.docs.PA.nom)}. ${esc(D.docs.PA.versio)}.</li></ul></div>
-  <div class="actions no-print"><button class="btn" data-act="print">Imprimeix o desa en PDF</button><a class="btn sec" href="#/temes">Continua explorant</a><button class="btn link" data-act="esborra">Esborra-ho tot</button></div>
-  ${note("D17 · D18","La descàrrega es genera al dispositiu. La persona decideix si hi inclou les valoracions. Consta la data, la versió i el caràcter personal del balanç.")}
-</div>`;
-};
+// Compatibilitat amb els enllaços antics: un únic balanç.
+P.resum = ()=>P.balanc();
 
 P.nocanvia = ()=>`<div class="wrap narrow">
   <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Què no canvia, amb o sense Acord</h1>
@@ -395,10 +422,31 @@ function copy(text){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,()=>fallback());}else fallback();
   function fallback(){const i=document.createElement("textarea");i.value=text;i.style.position="fixed";i.style.opacity="0";document.body.appendChild(i);i.select();try{document.execCommand("copy");done();}catch(e){toast("Copia aquest enllaç: "+text);}i.remove();}
 }
-function reset(){searchTerm="";S.temes.clear();S.sit.clear();S.val=false;S.imp={};S.rat={};S.vistes.clear();S.revisar.clear();S.test=null;toast("Fet. No queda res guardat.");}
+function reset(){searchTerm="";S.temes.clear();S.sit.clear();S.val=false;S.imp={};S.rat={};S.vistes.clear();S.revisar.clear();S.test=null;S.export={detail:true,extras:false,personal:true};toast("Fet. No queda res guardat.");}
+
+let questionObserver=null;
+function observeQuestions(){
+  if(!window.IntersectionObserver)return;
+  questionObserver=new window.IntersectionObserver(entries=>{
+    if(document.hidden)return;
+    entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.5){const id=entry.target.id.slice(2);if(preg(id))S.vistes.add(id);questionObserver.unobserve(entry.target);}});
+  },{threshold:0.5});
+  $$(".qcard .q").forEach(el=>questionObserver.observe(el));
+}
+function preparePrint(){
+  if(!["#/balanc","#/resum","#/exporta"].includes(location.hash))return;
+  let report=$("#print-report");
+  if(!report){report=document.createElement("div");report.id="print-report";document.body.appendChild(report);}
+  report.innerHTML=exportReport();
+  document.body.classList.add("printing-report");
+}
+function finishPrint(){document.body.classList.remove("printing-report");$("#print-report")?.remove();}
+window.addEventListener("beforeprint",preparePrint);
+window.addEventListener("afterprint",finishPrint);
 
 /* ---------- Router ---------- */
 function route(){
+  finishPrint();
   const h=(location.hash||"#/").slice(2).split("/");
   let html,cur;
   switch(h[0]){
@@ -410,7 +458,8 @@ function route(){
     case "q":cur="temes";html=P.pregunta(h[1]);break;
     case "balanc":cur="balanc";html=P.balanc();break;
     case "test":cur="test";html=P.test();break;
-    case "resum":cur="balanc";html=P.resum();break;
+    case "resum":cur="balanc";html=P.balanc();break;
+    case "exporta":cur="balanc";html=P.exporta();break;
     case "no-canvia":cur="no-canvia";html=P.nocanvia();break;
     case "fonts":cur="fonts";html=P.fonts();break;
     case "privacitat":cur="";html=P.privacitat();break;
@@ -418,16 +467,18 @@ function route(){
     default:html=P.nf();
   }
   closeSrc();
+  questionObserver?.disconnect();
   const mb=$(".menu-btn");if(mb){mb.setAttribute("aria-expanded","false");$("#menu").classList.remove("open");}
   $("#app").classList.toggle("home-main",h[0]==="");
   $("#app").innerHTML=html;
+  observeQuestions();
   document.title=(h[0]===""?"Amb o sense · L’Acord, a la teva vida":($("#app h1")?.textContent||"Amb o sense")+" · Amb o sense");
   $$(".top nav a").forEach(a=>{if(a.dataset.nav===cur)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   if(h[0]==="tema"&&h[2]){const el=$("#q-"+h[2]);if(el){el.scrollIntoView();$("#h-"+h[2]).focus({preventScroll:true});return;}}
   window.scrollTo(0,0);
   const f=$("#app h1");if(f)f.focus({preventScroll:true});
 }
-function rerender(keepScroll=true){const y=window.scrollY;const a=document.activeElement;const key=a&&(a.dataset.rate||a.dataset.imp||a.dataset.test!==undefined)?(a.name+"|"+a.value):null;const focusId=a?.id;const focusAct=a?.dataset.act;route();if(keepScroll)window.scrollTo(0,y);if(key){const [n,v]=key.split("|");const el=$(`input[name="${n}"][value="${v}"]`);if(el)el.focus({preventScroll:true});}else if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(focusAct==="inclou"){$('input[data-act="inclou"]')?.focus({preventScroll:true});}}
+function rerender(keepScroll=true){const y=window.scrollY;const a=document.activeElement;const key=a&&(a.dataset.rate||a.dataset.imp||a.dataset.test!==undefined)?(a.name+"|"+a.value):null;const focusId=a?.id;const focusAct=a?.dataset.act;route();if(keepScroll)window.scrollTo(0,y);if(key){const [n,v]=key.split("|");const el=$(`input[name="${n}"][value="${v}"]`);if(el)el.focus({preventScroll:true});}else if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}}
 
 /* ---------- Esdeveniments ---------- */
 document.addEventListener("submit",e=>{
@@ -437,7 +488,7 @@ document.addEventListener("submit",e=>{
   if(location.hash==="#/cerca")route();else location.hash="#/cerca";
 });
 document.addEventListener("click",e=>{
-  const src=e.target.closest("[data-src]");if(src){openSrc(src.dataset.src);return;}
+  const src=e.target.closest("[data-src]");if(src){const id=src.dataset.src.split(":")[0];if(preg(id))S.vistes.add(id);openSrc(src.dataset.src);return;}
   const a=e.target.closest("[data-act]");if(!a)return;
   const act=a.dataset.act, qid=a.dataset.q;
   if(act==="close-src")closeSrc();
@@ -450,7 +501,7 @@ document.addEventListener("click",e=>{
   else if(act==="test-check"){const k=+a.dataset.k;S.test.items[k].done=true;rerender();}
   else if(act==="test-new"){S.test=null;rerender(false);}
   else if(act==="esborra"){reset();rerender(false);}
-  else if(act==="print"){window.print();}
+  else if(act==="print"){preparePrint();window.print();}
   else if(act==="menu"){const open=a.getAttribute("aria-expanded")!=="true";a.setAttribute("aria-expanded",open);$("#menu").classList.toggle("open",open);}
   else if(act==="notes"){const on=document.body.classList.toggle("notes");a.setAttribute("aria-pressed",on);a.textContent=on?"Amaga les notes de disseny":"Mostra les notes de disseny";}
 });
@@ -459,9 +510,9 @@ document.addEventListener("change",e=>{
   if(t.dataset.sit!==undefined){const i=+t.dataset.sit;t.checked?S.sit.add(i):S.sit.delete(i);rerender();}
   else if(t.dataset.tema){t.checked?S.temes.add(t.dataset.tema):S.temes.delete(t.dataset.tema);rerender();$(`input[data-tema="${t.dataset.tema}"]`).focus({preventScroll:true});}
   else if(t.dataset.act==="val"){S.val=t.checked;rerender();$('input[data-act="val"]').focus({preventScroll:true});}
-  else if(t.dataset.act==="inclou"){S.inclouVal=t.checked;rerender();}
+  else if(t.dataset.export){S.export[t.dataset.export]=t.dataset.export==="detail"?t.value==="full":t.checked;rerender();}
   else if(t.dataset.imp){S.imp[t.dataset.imp]=+t.value;rerender();toast("Importància actualitzada");}
-  else if(t.dataset.rate){const [q,side]=t.dataset.rate.split(":");S.rat[q]=S.rat[q]||{};S.rat[q][side]=t.value==="ns"?"ns":+t.value;rerender();}
+  else if(t.dataset.rate){const [q,side]=t.dataset.rate.split(":");S.vistes.add(q);S.rat[q]=S.rat[q]||{};S.rat[q][side]=t.value==="ns"?"ns":+t.value;rerender();}
   else if(t.dataset.test!==undefined){const k=+t.dataset.test;S.test.items[k].ans=+t.value;rerender();}
 });
 document.addEventListener("keydown",e=>{
