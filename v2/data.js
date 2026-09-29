@@ -28,9 +28,9 @@ window.DATA = {
    "id": "habitatge",
    "familia": "Vida quotidiana",
    "nom": "Habitatge",
-   "frase": "Nous residents, segones residències i salvaguardes",
+   "frase": "Residents i protecció de l’habitatge",
    "actiu": true,
-   "intro": "La política d'habitatge no forma part de l'Acord. El que l'Acord toca és l'entrada de nous residents de la UE i l'interès inversor, que poden influir en el mercat."
+   "intro": "L'habitatge queda fora de l'Acord. El que sí toca és l'entrada de nous residents de la UE."
   },
   {
    "id": "salut",
@@ -62,7 +62,7 @@ window.DATA = {
    "nom": "Treball",
    "frase": "Drets laborals i feina a Europa",
    "actiu": true,
-   "intro": "L'Acord toca alguns drets laborals concrets i la manera de buscar feina a Europa. No canvia de manera general les condicions de treball."
+   "intro": "Què canviaria en els drets laborals i en la cerca de feina a Europa."
   },
   {
    "id": "educacio",
@@ -118,7 +118,7 @@ window.DATA = {
    "nom": "Sobirania",
    "frase": "Qui decideix les lleis i qui les interpreta",
    "actiu": true,
-   "intro": "Qui fa les lleis, qui les interpreta i quines condicions tenen els andorrans per viure, estudiar o treballar a la UE."
+   "intro": "Qui decideix les lleis i quins drets tindrien els andorrans a la UE."
   },
   {
    "id": "immigracio",
@@ -152,6 +152,7 @@ window.DATA = {
    "pregunta": "Canviarien els meus drets laborals?",
    "context": "Afecta les persones assalariades.",
    "amb": {
+    "breu": "No canviarien de manera general. Caldria adaptar alguns drets a les normes europees, com els permisos per tenir cura dels fills i alguns contractes de treball.",
     "text": "Les condicions laborals no canvien de manera general. Caldria adaptar alguns punts a les normes europees: eventuals de llarga durada, permís de parentalitat, treball temporal, treball de menors i informació dels contractes.",
     "qual": [],
     "fonts": [
@@ -543,6 +544,7 @@ window.DATA = {
    "pregunta": "Qui negociaria amb la UE en nom d'Andorra?",
    "context": "",
    "amb": {
+    "breu": "Andorra i la UE decidirien de mutu acord en un comitè conjunt, amb les dues parts en igualtat. També hi hauria altres comitès de participació.",
     "text": "Un Comitè Mixt Andorra–UE, amb les dues parts en igualtat i decisions de mutu acord. S'hi afegirien un Comitè d'Associació, un comitè parlamentari i un comitè d'agents econòmics i socials.",
     "qual": [],
     "fonts": [

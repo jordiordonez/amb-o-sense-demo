@@ -35,9 +35,9 @@ function responseBody(s){
 /* V2 · Primer nivell: pregunta, resposta breu de cada escenari i condicions decisives.
    Les condicions, terminis i incerteses no s'amaguen mai en el detall. */
 function essential(s){
-  return `<p class="resp">${esc(s.text)}</p>${s.qual.map(x=>`<p class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</p>`).join("")}`;
+  return `<p class="resp">${esc(s.breu||s.text)}</p>${s.qual.map(x=>`<p class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</p>`).join("")}`;
 }
-function hasDetail(q){return !!(q.amb.taula||q.sense.taula||q.pendent);}
+function hasDetail(q){return !!(q.amb.taula||q.sense.taula||q.amb.breu||q.sense.breu);}
 function qcard(q,{standalone=false}={}){
   const H = standalone?"h1":"h2";
   const scen = side=>{
@@ -45,11 +45,12 @@ function qcard(q,{standalone=false}={}){
     return `<section class="scen" aria-label="${SC[side]}">
       <h3 class="scen-h">${glyph(side)}${SC[side]}</h3>
       ${essential(s)}
+      ${side==="amb"&&q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}
       <p class="scen-src"><span class="nat">${s.naturalesa.map(esc).join(" · ")}</span><button class="btn link srcbtn" data-src="${q.id}:${side}">Mira la font<span class="sr"> de «${SC[side]}»: ${esc(q.pregunta)}</span></button></p>
     </section>`;
   };
   const tab = s=>s.taula?`<table class="minitab"><caption>${esc(s.taula.titol)}</caption><tbody>${s.taula.files.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("")}</tbody></table><p class="note-src">${esc(s.taula.nota)}</p>`:"";
-  const more = hasDetail(q)?`<details class="more"><summary>Més detall</summary><div>${tab(q.amb)}${tab(q.sense)}${q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}</div></details>`:"";
+  const more = hasDetail(q)?`<details class="more"><summary>Més detall</summary><div>${["amb","sense"].filter(side=>q[side].breu||q[side].taula).map(side=>`<section><h3>${SC[side]}</h3>${q[side].breu?`<p>${esc(q[side].text)}</p>`:""}${tab(q[side])}</section>`).join("")}</div></details>`:"";
   return `<article class="qcard" id="q-${q.id}" aria-labelledby="h-${q.id}">
     <${H} class="q" id="h-${q.id}" tabindex="-1">${esc(q.pregunta)}</${H}>
     ${q.context?`<p class="qctx">${esc(q.context)}</p>`:""}
@@ -117,8 +118,8 @@ function searchForm(value=""){
 /* V2 · Una llista clara de temes. Triar-ne un l'obre directament: sense passos previs. */
 function topicList(){
   const off=D.temes.filter(t=>!t.actiu);
-  return `<ul class="topics">${actius().map(t=>`<li><a class="topic" href="#/tema/${t.id}"><span class="topic-icon">${topicIcon(t.id)}</span><span class="topic-text"><b>${esc(t.nom)}</b><span>${esc(t.frase)}</span></span><span class="topic-n">${pregsDe(t.id).length} preguntes <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
-  <p class="soon-list"><b>En preparació:</b> ${off.map(t=>esc(t.nom)).join(" · ")}.</p>`;
+  return `<ul class="topics">${actius().map(t=>`<li><a class="topic" href="#/tema/${t.id}"><span class="topic-icon">${topicIcon(t.id)}</span><span class="topic-text"><b>${esc(t.nom)}</b><span>${esc(t.frase)}</span></span><span class="topic-n" aria-hidden="true">→</span></a></li>`).join("")}</ul>
+  ${off.length?`<p class="soon-list"><b>En preparació:</b> ${off.map(t=>esc(t.nom)).join(" · ")}.</p>`:""}`;
 }
 
 P.inici = ()=>`<div class="wrap">
@@ -162,7 +163,7 @@ P.cerca = ()=>{
   return `<div class="wrap narrow"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a> / Cerca</div><h1 tabindex="-1">Què vols saber?</h1><p>Cerca entre les 11 preguntes disponibles en aquesta demo.</p></div>${searchForm(searchTerm)}<p class="search-count" role="status">${matches.length} ${matches.length===1?"pregunta trobada":"preguntes trobades"}</p><div class="search-results">${matches.map(q=>`<a href="#/q/${q.id}"><span class="overline">${esc(tema(q.tema).nom)}</span><h2>${esc(q.pregunta)}</h2><span class="step-link">Compara els escenaris ${arrow}</span></a>`).join("")||`<div class="card"><h2>No hem trobat cap pregunta.</h2><p>Prova una paraula més general, com «feina», «residents» o «lleis». La demo només inclou tres temes.</p><a href="#/temes">Mira els temes disponibles →</a></div>`}</div></div>`;
 };
 
-P.temes = ()=>`<div class="wrap narrow">
+P.temes = ()=>`<div class="wrap">
   <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Tria un tema</h1>
   <p>Obre el que t'interessi. Pots tornar aquí i consultar-ne tants com vulguis.</p></div>
   ${topicList()}
@@ -174,9 +175,9 @@ P.tema = (id)=>{
   const rated=qs.filter(q=>S.rat[q.id]).length;
   return `<div class="wrap narrow tema-v2">
   <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a> / ${esc(t.nom)}</div>
-    <span class="topic-heading-icon">${topicIcon(t.id)}</span><h1 tabindex="-1">${esc(t.nom)}</h1><p class="intro">${esc(t.intro)}</p></div>
-  <nav class="toc" aria-labelledby="toc-h"><h2 id="toc-h">En aquest tema</h2><ol>${qs.map(q=>`<li><a href="#/tema/${id}/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ol></nav>
-  ${note("V2 · Tema","L'essencial és visible sense obrir res: pregunta, resposta breu de cada escenari i condicions. Les condicions i incerteses que canvien el sentit de la resposta no es desen al detall. «Més detall» només apareix quan hi ha xifres o notes complementàries.")}
+    <h1 tabindex="-1">${esc(t.nom)}</h1><p class="intro">${esc(t.intro)}</p></div>
+  <details class="toc"><summary>Les ${qs.length} preguntes del tema</summary><nav aria-label="Preguntes del tema"><ol>${qs.map(q=>`<li><a href="#/tema/${id}/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ol></nav></details>
+  ${note("V2 · Tema","L'essencial és visible sense obrir res: pregunta, resposta breu de cada escenari i condicions. Les condicions i incerteses que canvien el sentit de la resposta no es desen al detall. L’índex es pot obrir per saltar a una pregunta. «Més detall» amplia les respostes o mostra les xifres; els avisos de fonts pendents queden visibles.")}
   ${qs.map(q=>qcard(q)).join("")}
   <section class="after" aria-labelledby="after-h">
     <h2 id="after-h">I ara, què vols fer?</h2>
@@ -206,13 +207,13 @@ P.valora = (id,step)=>{
     <p class="small muted">El balanç resumeix les teves valoracions. No és una puntuació oficial de l'Acord.</p>
   </div>`;
   const q=qs[i-1];
-  const side=s=>`<section class="scen" aria-label="${SC[s]}"><h3 class="scen-h">${glyph(s)}${SC[s]}</h3>${essential(q[s])}</section>`;
+  const side=s=>`<section class="rating-scenario"><div class="scen" aria-label="${SC[s]}"><h2 class="scen-h">${glyph(s)}${SC[s]}</h2>${essential(q[s])}${q[s].breu?`<details class="more"><summary>Més detall</summary><div><p>${esc(q[s].text)}</p></div></details>`:""}${s==="amb"&&q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}<button class="btn link srcbtn" data-src="${q.id}:${s}">Mira la font<span class="sr"> de ${SC[s]}</span></button></div>${rateBlock(q,s)}</section>`;
   return `<div class="wrap narrow valora">${head}
     <h1 tabindex="-1" id="h-${q.id}">${esc(q.pregunta)}</h1>
+    ${q.context?`<p class="qctx">${esc(q.context)}</p>`:""}
     ${q.igual?`<p class="igual">${mark("glyph")} Igual en tots dos escenaris</p>`:""}
-    <div class="pair">${side("amb")}${side("sense")}</div>
     <p class="hint">Valora cada escenari per separat. Pots triar «Encara no ho sé» o passar a la següent.</p>
-    <div class="rate-grid">${rateBlock(q,"amb")}${rateBlock(q,"sense")}</div>
+    <div class="rate-grid">${side("amb")}${side("sense")}</div>
     <div class="actions steps-nav"><a class="btn" href="#/valora/${id}/${i+1}">${i<n?"Següent pregunta":"Continua"}</a>${i>1?`<a class="btn sec" href="#/valora/${id}/${i-1}">Anterior</a>`:""}<a class="btn link" href="#/tema/${id}">Deixa-ho aquí</a></div>
     ${note("V2 · Una pregunta cada vegada","Menys controls a la vista. Opcions escrites, «Encara no ho sé» sempre disponible i cap resposta preseleccionada. La importància es demana al final, quan té sentit per al balanç.")}
   </div>`;

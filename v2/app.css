@@ -760,3 +760,33 @@ details.more>div{padding-bottom:4px}
 @media print{.after,.toc,details.more summary{display:none!important}details.more>div{display:block}}
 .valora .scen{background:#fff}
 @media (min-width:700px){.valora .pair{grid-template-columns:1fr 1fr}}
+
+/* Primera lectura compacta: mateixa disposició per als quinze temes. */
+.topics{grid-template-columns:1fr;gap:10px}
+.topic{display:grid;grid-template-columns:40px minmax(0,1fr) 20px;align-items:center;gap:12px;min-height:88px;padding:14px 16px;border-radius:10px}
+.topic .topic-icon{width:40px;height:40px;border-radius:8px}
+.topic .topic-icon svg{width:24px;height:24px}
+.topic-text b{font-size:20px}
+.topic-text span{font-size:16px}
+.topic-n{margin:0;font-size:20px;text-align:right}
+@media(min-width:900px){.topics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tema-v2 .pagehead{margin-bottom:16px}
+.tema-v2 .intro{font-size:18px;line-height:1.5;margin-bottom:0}
+details.toc{padding:0 16px;margin:0 0 20px;border-radius:8px}
+details.toc summary{min-height:48px;padding:10px 0;font-size:17px;line-height:28px;color:var(--blau)}
+details.toc[open] summary{margin:0;border:0}
+details.toc nav{padding:0 0 12px}
+details.toc ol{padding-left:24px}
+.valora .rating-scenario{margin:0;min-width:0}
+.valora .rating-scenario .scen{margin-bottom:12px}
+.valora .rating-scenario .choice{width:100%}
+.valora .rate-grid{align-items:start}
+@media(max-width:700px){
+  .intro-v2 .overline{display:none}
+  .intro-v2 h1{font-size:30px}
+  .tema-v2 .qcard{padding:16px}
+}
+
+details.toc summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.toc summary::after{content:"+";font-size:24px;font-weight:700}
+details.toc[open] summary::after{content:"−"}
