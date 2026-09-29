@@ -24,8 +24,7 @@ const ico = {
   ok:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`,
   ko:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`
 };
-// V2: sense notes de disseny a la pantalla. Les decisions es documenten a LLEGEIX.md.
-const note = ()=>"";
+const note = (d,txt)=>`<aside class="dnote" aria-label="Nota de disseny"><b>${esc(d)}</b> · ${txt}</aside>`;
 
 /* ---------- Components ---------- */
 function responseBody(s){
@@ -123,17 +122,19 @@ function topicList(){
   ${off.length?`<p class="soon-list"><b>En preparació:</b> ${off.map(t=>esc(t.nom)).join(" · ")}.</p>`:""}`;
 }
 
-P.inici = ()=>`<div class="wrap">
+P.inici = ()=>`<div class="hero-v2"><div class="wrap">
   <section class="intro-v2" aria-labelledby="home-title">
-    <p class="overline">L'Acord d'associació Andorra–UE</p>
-    <h1 id="home-title" tabindex="-1">Què canviaria amb l'Acord d'associació?</h1>
+    <p class="overline"><span class="tiny-mark" aria-hidden="true">↔</span> L'Acord d'associació Andorra–UE</p>
+    <h1 id="home-title" tabindex="-1">Què canviaria amb l'<em>Acord d'associació?</em></h1>
     <p class="lead">Tria un tema i compara què passaria amb Acord i sense. Cada resposta diu d'on surt.</p>
   </section>
-  <section class="block" aria-labelledby="tria">
+  <section class="hero-topics-v2" aria-labelledby="tria">
     <h2 id="tria">Tria un tema</h2>
     ${topicList()}
     ${note("V2 · Portada","Els temes apareixen a la primera pantalla, també al mòbil. Triar-ne un l'obre directament: no cal marcar-ne diversos ni confirmar. Sense famílies abstractes: una llista clara.")}
   </section>
+</div></div>
+<div class="wrap">
   <section class="block how" aria-labelledby="com">
     <h2 id="com">Com funciona</h2>
     <ol class="steps">
@@ -176,7 +177,7 @@ P.tema = (id)=>{
   const rated=qs.filter(q=>S.rat[q.id]).length;
   return `<div class="wrap narrow tema-v2">
   <div class="pagehead"><div class="crumbs"><a href="#/">Inici</a> / ${esc(t.nom)}</div>
-    <h1 tabindex="-1">${esc(t.nom)}</h1><p class="intro">${esc(t.intro)}</p></div>
+    <div class="tema-title"><span class="topic-heading-icon">${topicIcon(t.id)}</span><h1 tabindex="-1">${esc(t.nom)}</h1></div><p class="intro">${esc(t.intro)}</p></div>
   <details class="toc"><summary>Les ${qs.length} preguntes del tema</summary><nav aria-label="Preguntes del tema"><ol>${qs.map(q=>`<li><a href="#/tema/${id}/${q.id}">${esc(q.pregunta)}</a></li>`).join("")}</ol></nav></details>
   ${note("V2 · Tema","L'essencial és visible sense obrir res: pregunta, resposta breu de cada escenari i condicions. Les condicions i incerteses que canvien el sentit de la resposta no es desen al detall. L’índex es pot obrir per saltar a una pregunta. «Més detall» amplia les respostes o mostra les xifres; els avisos de fonts pendents queden visibles.")}
   ${qs.map(q=>qcard(q)).join("")}
@@ -495,6 +496,7 @@ document.addEventListener("click",e=>{
   else if(act==="esborra"){reset();rerender(false);}
   else if(act==="print"){preparePrint();window.print();}
   else if(act==="menu"){const open=a.getAttribute("aria-expanded")!=="true";a.setAttribute("aria-expanded",open);$("#menu").classList.toggle("open",open);}
+  else if(act==="notes"){const on=document.body.classList.toggle("notes");a.setAttribute("aria-pressed",on);a.textContent=on?"Amaga les notes de disseny":"Mostra les notes de disseny";}
 });
 document.addEventListener("change",e=>{
   const t=e.target;

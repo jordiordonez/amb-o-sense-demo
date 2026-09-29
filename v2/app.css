@@ -790,3 +790,47 @@ details.toc ol{padding-left:24px}
 details.toc summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
 details.toc summary::after{content:"+";font-size:24px;font-weight:700}
 details.toc[open] summary::after{content:"−"}
+
+/* V2 · Recupera la identitat de la v1: bloc blau fosc a la portada i accent daurat.
+   El daurat marca navegació i passos, mai un escenari (els dos tenen el mateix tractament). */
+:root{--daurat:#E9D68D}
+.home-main{padding-top:0!important}
+.hero-v2{background:var(--ink);color:#fff;padding:48px 0 44px;margin-bottom:48px}
+.hero-v2 .intro-v2{margin-bottom:28px}
+.hero-v2 .overline{color:#C1CCE0}
+.hero-v2 .intro-v2 h1{color:#fff;font-size:clamp(34px,4.6vw,56px);letter-spacing:-.045em;line-height:1.06}
+.hero-v2 .intro-v2 h1 em{font-style:normal;color:var(--daurat)}
+.hero-v2 .lead{color:#D7DFED}
+.hero-topics-v2>h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#B5C2D9;margin:0 0 12px;font-weight:700}
+.hero-v2 .topic{background:#223657;border-color:#52617C;color:#fff;transition:background .18s,border-color .18s,transform .18s}
+.hero-v2 .topic:hover{background:#2D446B;border-color:#ACBBD3;box-shadow:none;transform:translateY(-2px)}
+.hero-v2 .topic .topic-icon{background:#32486A;color:var(--daurat);border-radius:50%}
+.hero-v2 .topic-text b{color:#fff}
+.hero-v2 .topic-text span{color:#C5D1E4}
+.hero-v2 .topic-n{color:var(--daurat)}
+.hero-v2 .soon-list{color:#BCCAE0}
+.hero-v2 .soon-list b{color:#fff}
+.hero-v2 :focus-visible{outline-color:#fff}
+.steps li::before{background:var(--ink);color:var(--daurat)}
+.block>h2{font-size:clamp(24px,2.6vw,32px);letter-spacing:-.035em}
+.tema-title{display:flex;align-items:center;gap:16px}
+.tema-title .topic-heading-icon{margin:0;width:52px;height:52px;border-radius:14px;background:var(--ink);color:var(--daurat);flex:none}
+.tema-title .topic-heading-icon svg{width:28px;height:28px}
+.tema-v2 .pagehead h1{font-size:clamp(34px,4.2vw,50px);letter-spacing:-.045em}
+.after-card.main{background:var(--ink);border-color:var(--ink);color:#fff}
+.after-card.main h3{color:#fff}
+.after-card.main p{color:#D7DFED}
+.after-card.main .btn{background:var(--daurat);border-color:var(--daurat);color:var(--ink)}
+.after-card.main .btn:hover{background:#F2E4AE}
+.after-card.main :focus-visible{outline-color:#fff}
+.pbar i{background:var(--daurat)}
+.pbar{background:#DFE5EF}
+.progress span:first-child{color:var(--ink)}
+@media (max-width:700px){
+  .hero-v2{padding:24px 0 28px;margin-bottom:36px}
+  .hero-v2 .intro-v2{margin-bottom:20px}
+  .hero-v2 .intro-v2 h1{font-size:32px}
+  .hero-v2 .lead{font-size:17px}
+  .tema-title .topic-heading-icon{width:44px;height:44px}
+}
+@media (prefers-reduced-motion:no-preference){.hero-v2 .intro-v2,.hero-topics-v2{animation:arrive .4s ease-out both}.hero-topics-v2{animation-delay:.07s}}
