@@ -24,7 +24,8 @@ const ico = {
   ok:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M5.5 10.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`,
   ko:`<svg class="ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" fill="none" stroke="#fff" stroke-width="2.2"/></svg>`
 };
-const note = (d,txt)=>`<aside class="dnote" aria-label="Nota de disseny"><b>${esc(d)}</b> · ${txt}</aside>`;
+// V2: sense notes de disseny a la pantalla. Les decisions es documenten a LLEGEIX.md.
+const note = ()=>"";
 
 /* ---------- Components ---------- */
 function responseBody(s){
@@ -494,7 +495,6 @@ document.addEventListener("click",e=>{
   else if(act==="esborra"){reset();rerender(false);}
   else if(act==="print"){preparePrint();window.print();}
   else if(act==="menu"){const open=a.getAttribute("aria-expanded")!=="true";a.setAttribute("aria-expanded",open);$("#menu").classList.toggle("open",open);}
-  else if(act==="notes"){const on=document.body.classList.toggle("notes");a.setAttribute("aria-pressed",on);a.textContent=on?"Amaga les notes de disseny":"Mostra les notes de disseny";}
 });
 document.addEventListener("change",e=>{
   const t=e.target;
