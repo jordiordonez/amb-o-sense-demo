@@ -1110,3 +1110,16 @@ details.toc[open] summary::after{content:"−"}
 .is-home .torna-test{bottom:auto;top:16px}
 @media (prefers-reduced-motion:no-preference){.torna-test{animation:torna .25s ease-out both}@keyframes torna{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}}
 @media print{.torna-test{display:none}}
+
+/* Partides del test */
+.stats .stat-partida dd{white-space:nowrap}
+.partida-total{font-size:18px;margin:0 0 4px;color:var(--text)}
+.partida-total b{color:var(--ink);font-size:22px}
+.partida-nova{justify-content:center;margin-top:6px}
+.partida-nova .btn.link,.test-score>.btn.link{color:var(--text2)}
+.partides-ant{margin-top:14px;padding-top:12px;border-top:1px solid var(--sep)}
+.partides-ant h3{font-size:14px;color:var(--text2);margin:0 0 6px}
+.partides-ant ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.partides-ant li{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.partides-ant li span{color:var(--text2)}
+.stats.dues{grid-template-columns:1fr 1fr;max-width:320px}
