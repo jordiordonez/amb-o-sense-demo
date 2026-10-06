@@ -226,7 +226,7 @@ function flowAside(){
   return `<aside class="flow-aside" aria-label="El teu recorregut">
     <section class="aside-card"><h2>Les teves tries</h2>${linia(g,{petita:true,titol:"Total"})}<p class="small">${g.n?`${g.n} ${g.n===1?"pregunta triada":"preguntes triades"} de ${ELEG.length}.`:"Tria a cada pregunta l'escenari que t'afavoreix més. Si no ho saps, salta-la."}</p>${g.n?`<a class="small" href="#/balanc">Mira el balanç i revisa-les</a>`:""}</section>
     <section class="aside-card"><h2>Prefereixes anar per temes?</h2><p class="small">${D.temes.length} temes, ${D.preguntes.length} preguntes. Cada resposta diu d'on surt.</p><a class="btn sec full" href="#/temes">Tria un tema</a></section>
-    <section class="aside-card"><h2>Posa't a prova</h2><p class="small">Tandes de 3 preguntes sobre l'Acord. ${S.test.partida.preguntes?`Partida en curs: ${S.test.partida.encerts} de ${S.test.partida.preguntes}.`:""}</p><a class="btn sec full" href="#/test">Juga al test</a></section>
+    <section class="aside-card"><h2>Quant en saps de l'Acord?</h2><p class="small">Tres preguntes cada vegada, amb la resposta i la font. ${S.test.partida.preguntes?`Marcador: ${S.test.partida.encerts} de ${S.test.partida.preguntes}.`:""}</p><a class="btn sec full" href="#/test">Comprova què en saps</a></section>
     <p class="aside-priv">${mark("glyph")} Les teves tries no surten d'aquest navegador.</p>
   </aside>`;
 }
@@ -276,8 +276,8 @@ P.tema = (id)=>{
   <section class="after" aria-labelledby="after-h">
     <h2 id="after-h">I ara, què vols fer?</h2>
     <div class="after-grid">
-      <div class="after-card main"><h3>Posa't a prova</h3><p>Una tanda de 3 preguntes sobre ${esc(t.nom)}, amb l'explicació de cada resposta.</p>
-        <button class="btn" data-act="test-start" data-mode="${id}">Juga a ${esc(t.nom)}</button></div>
+      <div class="after-card main"><h3>Quant en saps de ${esc(t.nom)}?</h3><p>Tres preguntes sobre ${esc(t.nom)}, amb l'explicació i la font de cada resposta.</p>
+        <button class="btn" data-act="test-start" data-mode="${id}">Respon tres preguntes</button></div>
       <div class="after-card"><h3>${triades?`Has triat ${triades} de ${qs.filter(q=>!q.igual).length}`:"Continua amb preguntes a l'atzar"}</h3><p>Les tries d'aquest tema compten al teu balanç.</p><a class="btn sec" href="#/">Torna a «Amb o sense»</a>
         <p class="small" style="margin:12px 0 0">Vols puntuar cada escenari per separat? <a href="#/valora/${id}">${rated?"Continua":"Fes"} la valoració detallada</a>.</p></div>
     </div>
@@ -436,27 +436,27 @@ function testStats({nomesRatxa=false}={}){
   const t=S.test,p=t.partida;
   const ratxa=`<div><dt>Ratxa</dt><dd>${p.ratxa}</dd></div><div><dt>Millor ratxa</dt><dd>${t.millor}</dd></div>`;
   if(nomesRatxa) return `<dl class="stats dues">${ratxa}</dl>`;
-  return `<dl class="stats"><div class="stat-partida"><dt>Partida</dt><dd>${p.encerts}<small> de ${p.preguntes}</small></dd></div><div><dt>Tandes</dt><dd>${p.hist.length}</dd></div>${ratxa}</dl>`;
+  return `<dl class="stats"><div class="stat-partida"><dt>Correctes</dt><dd>${p.encerts}<small> de ${p.preguntes}</small></dd></div><div><dt>Tandes</dt><dd>${p.hist.length}</dd></div>${ratxa}</dl>`;
 }
 const pct = (a,b)=>b?Math.round(a/b*100)+"%":"";
 function anteriors(){
   const a=S.test.anteriors;
-  return a.length?`<div class="partides-ant"><h3>Partides anteriors</h3><ul>${a.map(x=>`<li><b>${x.encerts} de ${x.preguntes}</b> <span>${pct(x.encerts,x.preguntes)} · ${x.tandes} ${x.tandes===1?"tanda":"tandes"}</span></li>`).join("")}</ul></div>`:"";
+  return a.length?`<div class="partides-ant"><h3>Marcadors anteriors</h3><ul>${a.map(x=>`<li><b>${x.encerts} de ${x.preguntes}</b> <span>${pct(x.encerts,x.preguntes)} · ${x.tandes} ${x.tandes===1?"tanda":"tandes"}</span></li>`).join("")}</ul></div>`:"";
 }
-const novaPartidaBtn = ()=>S.test.partida.preguntes?`<button class="btn link" data-act="partida-nova">Comença una partida nova</button>`:"";
+const novaPartidaBtn = ()=>S.test.partida.preguntes?`<button class="btn link" data-act="partida-nova">Comença un marcador nou</button>`:"";
 function temaProgress(id){const p=S.test.perTema[id]||{ok:0,n:0};const tot=D.test[id].length;return {ok:p.ok,n:p.n,tot,pct:Math.round(Math.min(p.ok,tot)/tot*100)};}
 P.test = (sub)=>{
   const T=S.test;
   if(sub==="joc"&&T.tanda) return P.tanda();
-  return `<div class="wrap wide test-page"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Posa't a prova</h1>
-    <p>Tandes de 3 preguntes sobre què diu l'Acord. Cada resposta té l'explicació i l'enllaç a la font. Res no surt del teu navegador.</p></div>
+  return `<div class="wrap wide test-page"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Quant en saps de l'Acord?</h1>
+    <p>Tres preguntes cada vegada sobre què diu l'Acord. Cada resposta té l'explicació i l'enllaç a la font. Res no surt del teu navegador.</p></div>
     <div class="test-top">
-      <section class="test-hero"><h2>Tots els temes</h2><p>Tres preguntes de temes diferents, a l'atzar. Les que ja has vist no es repeteixen fins que les hagis fet totes.</p><button class="btn gold" data-act="test-start" data-mode="tots">Juga una tanda ${arrow}</button></section>
-      <section class="test-score" aria-label="La teva puntuació"><h2>${T.partida.preguntes?"Partida en curs":"La teva puntuació"}</h2>${testStats()}${T.partida.hist.length?`<ol class="tanda-hist">${T.partida.hist.slice(-8).map((h,i)=>`<li title="${h.ok} de ${h.n}"><span class="sr">Tanda ${T.partida.hist.length-Math.min(8,T.partida.hist.length)+i+1}: ${h.ok} de ${h.n}</span>${"●".repeat(h.ok)}${"○".repeat(h.n-h.ok)}</li>`).join("")}</ol>`:'<p class="small muted">Encara no has jugat cap tanda en aquesta partida.</p>'}${novaPartidaBtn()}${anteriors()}</section>
+      <section class="test-hero"><h2>Tots els temes</h2><p>Tres preguntes de temes diferents, a l'atzar. Les que ja has vist no es repeteixen fins que les hagis fet totes.</p><button class="btn gold" data-act="test-start" data-mode="tots">Respon tres preguntes ${arrow}</button></section>
+      <section class="test-score" aria-label="La teva puntuació"><h2>El teu marcador</h2>${testStats()}${T.partida.hist.length?`<ol class="tanda-hist">${T.partida.hist.slice(-8).map((h,i)=>`<li title="${h.ok} de ${h.n}"><span class="sr">Tanda ${T.partida.hist.length-Math.min(8,T.partida.hist.length)+i+1}: ${h.ok} de ${h.n}</span>${"●".repeat(h.ok)}${"○".repeat(h.n-h.ok)}</li>`).join("")}</ol>`:'<p class="small muted">Encara no has respost cap pregunta.</p>'}${novaPartidaBtn()}${anteriors()}</section>
     </div>
     <h2 class="test-h2">O tria un tema</h2>
-    <ul class="test-temes">${actius().map(t=>{const p=temaProgress(t.id);return `<li><button class="test-tema" data-act="test-start" data-mode="${t.id}"><span class="mini-icon">${topicIcon(t.id)}</span><span class="tt-text"><b>${esc(t.nom)}</b><span class="tt-bar" aria-hidden="true"><i style="width:${p.pct}%"></i></span><small>${p.n?`${p.ok} encerts de ${p.n}`:`${p.tot} preguntes`}</small></span></button></li>`;}).join("")}</ul>
-    ${note("D15 · V3","Joc sense rànquing ni cronòmetre: tandes curtes, ratxa i progrés per tema. Verd i vermell només per corregir, sempre amb icona i text. «No ho sé» no penalitza.")}
+    <ul class="test-temes">${actius().map(t=>{const p=temaProgress(t.id);return `<li><button class="test-tema" data-act="test-start" data-mode="${t.id}"><span class="mini-icon">${topicIcon(t.id)}</span><span class="tt-text"><b>${esc(t.nom)}</b><span class="tt-bar" aria-hidden="true"><i style="width:${p.pct}%"></i></span><small>${p.n?`${p.ok} correctes de ${p.n}`:`${p.tot} preguntes`}</small></span></button></li>`;}).join("")}</ul>
+    ${note("D15 · V3","Repte sobri, sense rànquing ni cronòmetre: tres preguntes cada vegada, marcador, ratxa i progrés per tema. Verd i vermell només per corregir, sempre amb icona i text. «No ho sé» no penalitza.")}
   </div>`;
 };
 P.tanda = ()=>{
@@ -465,13 +465,13 @@ P.tanda = ()=>{
   const marca=x=>{const Q=D.test[x.tema][x.i];return x.ans===Q.c?'<span class="ok">'+ico.ok+'</span>':x.ans===-1?'<span class="ns">'+ico.ns+'</span>':'<span class="ko">'+ico.ko+'</span>';};
   if(td.pos>=its.length){
     const ok=its.filter(x=>x.ans===D.test[x.tema][x.i].c).length;
-    return `<div class="wrap narrow test-page"><div class="crumbs"><a href="#/test">Test</a> / ${esc(modeNom)}</div>
+    return `<div class="wrap narrow test-page"><div class="crumbs"><a href="#/test">Quant en saps?</a> / ${esc(modeNom)}</div>
       <section class="card tanda-fi" aria-labelledby="tf-h"><p class="overline">Tanda ${T.partida.hist.length} · ${esc(modeNom)}</p><h1 id="tf-h" tabindex="-1">${ok} de ${its.length}</h1>
       <p class="tanda-marks" aria-hidden="true">${its.map(marca).join("")}</p>
-      <p>${ok===its.length?"Ple! Has encertat totes les preguntes.":ok?"Bona tanda. Pots repassar les respostes als temes.":"Cap encert aquesta vegada. Les explicacions t'ajudaran a la propera."}</p>
-      <p class="partida-total">Partida: <b>${T.partida.encerts} de ${T.partida.preguntes}</b> en ${T.partida.hist.length} ${T.partida.hist.length===1?"tanda":"tandes"}</p>
+      <p>${ok===its.length?"Totes correctes.":"Repassa les que has fallat: cada pregunta enllaça a la resposta completa."}</p>
+      <p class="partida-total">Marcador: <b>${T.partida.encerts} de ${T.partida.preguntes}</b> en ${T.partida.hist.length} ${T.partida.hist.length===1?"tanda":"tandes"}</p>
       ${testStats({nomesRatxa:true})}
-      <div class="actions"><button class="btn" data-act="test-start" data-mode="${td.mode}">Una altra tanda ${arrow}</button><a class="btn sec" href="#/test">Canvia de tema</a></div>
+      <div class="actions"><button class="btn" data-act="test-start" data-mode="${td.mode}">Tres preguntes més ${arrow}</button><a class="btn sec" href="#/test">Canvia de tema</a></div>
       <div class="actions partida-nova">${novaPartidaBtn()}</div></section>
       <details class="card tanda-rev"><summary>Repassa les 3 preguntes</summary>${its.map(x=>{const Q=D.test[x.tema][x.i];return `<div class="rev-item">${marca(x)}<div><b>${esc(Q.q)}</b><p>${esc(Q.o[Q.c])}. ${esc(Q.e)} <a href="#/tema/${x.tema}/${Q.ref}">Mira la resposta</a></p></div></div>`;}).join("")}</details></div>`;
   }
@@ -485,11 +485,11 @@ P.tanda = ()=>{
     }
     return `<button class="opt-btn${val===-1?" ns":""}${cls}" ${done?"disabled":`data-act="test-resp" data-v="${val}"`}>${icon}<span class="opt-t">${esc(o)}</span>${badge?`<span class="badge">${badge}</span>`:""}</button>`;
   };
-  return `<div class="wrap narrow test-page"><div class="crumbs"><a href="#/test">Test</a> / ${esc(modeNom)}</div>
+  return `<div class="wrap narrow test-page"><div class="crumbs"><a href="#/test">Quant en saps?</a> / ${esc(modeNom)}</div>
     <section class="tq card" aria-labelledby="tq-h"><div class="tq-head"><span class="eyebrow">${esc(tema(x.tema).nom)}</span><span class="tq-pos">Pregunta ${td.pos+1} de ${its.length}</span><ol class="dots" aria-hidden="true">${its.map((y,i)=>`<li class="${i<td.pos||(i===td.pos&&done)?(y.ans===D.test[y.tema][y.i].c?"fet":"saltat"):i===td.pos?"ara":""}"></li>`).join("")}</ol></div>
       <h1 id="tq-h" tabindex="-1">${esc(Q.q)}</h1>
       <div class="opts" role="group" aria-labelledby="tq-h">${[...Q.o,"No ho sé"].map(opt).join("")}</div>
-      ${done?`<div class="feedback ${x.ans===Q.c?"ok":x.ans===-1?"":"ko"}" role="status"><p><b>${x.ans===Q.c?(T.partida.ratxa>1?`Encert! Ratxa de ${T.partida.ratxa}.`:"Encert!"):x.ans===-1?"Cap problema: aquí tens la resposta.":"No és aquesta."}</b> ${esc(Q.e)}</p><a href="#/tema/${x.tema}/${Q.ref}">Mira la resposta completa</a></div>
+      ${done?`<div class="feedback ${x.ans===Q.c?"ok":x.ans===-1?"":"ko"}" role="status"><p><b>${x.ans===Q.c?(T.partida.ratxa>1?`Correcte. Ratxa de ${T.partida.ratxa}.`:"Correcte."):x.ans===-1?"Aquesta és la resposta.":"No és aquesta."}</b> ${esc(Q.e)}</p><a href="#/tema/${x.tema}/${Q.ref}">Mira la resposta completa</a></div>
         <div class="actions"><button class="btn" data-act="test-next" id="test-next">${td.pos+1<its.length?"Següent pregunta":"Mira el resultat"} ${arrow}</button></div>`:""}
     </section></div>`;
 };
@@ -502,7 +502,7 @@ function tornaTest(cur){
   if(!td||!S.test.tornar||cur==="test")return;
   const fi=td.pos>=td.items.length;
   const box=document.createElement("div");box.id="torna-test";box.className="torna-test";
-  box.innerHTML=`<a class="torna-btn" href="#/test/joc"><span aria-hidden="true">←</span> ${fi?"Torna al resultat del test":`Torna al test · pregunta ${td.pos+1} de ${td.items.length}`}</a><button class="torna-x" data-act="torna-tanca" aria-label="Amaga el botó de tornar al test">×</button>`;
+  box.innerHTML=`<a class="torna-btn" href="#/test/joc"><span aria-hidden="true">←</span> ${fi?"Torna al resultat":`Torna a les preguntes · ${td.pos+1} de ${td.items.length}`}</a><button class="torna-x" data-act="torna-tanca" aria-label="Amaga el botó de tornar a les preguntes">×</button>`;
   document.body.appendChild(box);
 }
 
@@ -702,14 +702,14 @@ document.addEventListener("click",e=>{
       if(v===Q.c){P_.encerts++;p.ok++;P_.ratxa++;T.millor=Math.max(T.millor,P_.ratxa);}else P_.ratxa=0;}
     if(td.items.every(it=>it.ans!==null)){P_.hist.push({mode:td.mode,ok:td.items.filter(it=>it.ans===D.test[it.tema][it.i].c).length,n:td.items.length});}
     save();rerender();$("#test-next")?.focus({preventScroll:true});
-    anuncia(v===Q.c?"Encert.":v===-1?"Aquí tens la resposta.":"No és aquesta.");
+    anuncia(v===Q.c?"Correcte.":v===-1?"Aquesta és la resposta.":"No és aquesta.");
   }
   else if(act==="partida-nova"){
     const T=S.test,p=T.partida;
     if(p.preguntes){T.anteriors.unshift({encerts:p.encerts,preguntes:p.preguntes,tandes:p.hist.length});T.anteriors=T.anteriors.slice(0,5);}
     T.partida=novaPartida();T.vistes={};T.perTema={};T.tanda=null;T.tornar=false;save();
     if(location.hash==="#/test")rerender(false);else location.hash="#/test";
-    anuncia("Partida nova. El marcador torna a zero.");
+    anuncia("Marcador nou. Torna a zero.");
   }
   else if(act==="test-next"){const td=S.test.tanda;if(td){td.pos++;save();rerender(false);}}
   else if(act==="esborra"){reset();rerender(false);}
