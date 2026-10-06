@@ -1098,3 +1098,15 @@ details.toc[open] summary::after{content:"−"}
   .flow-card .tria-pre{font-size:12px}
   .flow-card .tria-alt .btn.link{min-height:36px;padding:2px 8px;font-size:14px}
 }
+
+/* Tornar al test des d'una resposta */
+.torna-test{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;display:flex;align-items:stretch;background:var(--ink);color:#fff;border-radius:999px;box-shadow:0 10px 30px rgba(24,42,75,.3);max-width:calc(100% - 32px)}
+.torna-btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 8px 0 22px;color:#fff;font-weight:700;font-size:16px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.torna-btn span{color:var(--daurat);font-size:20px}
+.torna-btn:hover{text-decoration:underline}
+.torna-x{background:none;border:0;color:#C9D3E4;font-size:24px;line-height:1;width:48px;min-height:52px;cursor:pointer;border-radius:0 999px 999px 0}
+.torna-x:hover{color:#fff}
+.torna-test :focus-visible{outline-color:#fff;outline-offset:-4px}
+.is-home .torna-test{bottom:auto;top:16px}
+@media (prefers-reduced-motion:no-preference){.torna-test{animation:torna .25s ease-out both}@keyframes torna{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}}
+@media print{.torna-test{display:none}}

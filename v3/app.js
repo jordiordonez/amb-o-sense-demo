@@ -480,6 +480,18 @@ P.tanda = ()=>{
     </section></div>`;
 };
 
+/* Tornar al joc: si des del test s'obre una resposta, un botó fix permet tornar-hi
+   a la mateixa pregunta (o al resultat de la tanda). Es pot tancar. */
+function tornaTest(cur){
+  $("#torna-test")?.remove();
+  const td=S.test.tanda;
+  if(!td||!S.test.tornar||cur==="test")return;
+  const fi=td.pos>=td.items.length;
+  const box=document.createElement("div");box.id="torna-test";box.className="torna-test";
+  box.innerHTML=`<a class="torna-btn" href="#/test/joc"><span aria-hidden="true">←</span> ${fi?"Torna al resultat del test":`Torna al test · pregunta ${td.pos+1} de ${td.items.length}`}</a><button class="torna-x" data-act="torna-tanca" aria-label="Amaga el botó de tornar al test">×</button>`;
+  document.body.appendChild(box);
+}
+
 /* ---------- Pàgines informatives ---------- */
 P.nocanvia = ()=>`<div class="wrap narrow"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Què no canvia, amb o sense Acord</h1><p>Elements que el quadre comparatiu descriu com a iguals en tots dos escenaris.</p></div>
   <div class="card"><ul class="list" style="margin:0">${D.nocanvia.items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul><button class="btn sec" data-src="nocanvia">Consulta la font</button></div></div>`;
@@ -622,6 +634,7 @@ function route(){
   $("#app").innerHTML=html;
   document.title=(h[0]===""?"Amb o sense · Què canvia per a tu":($("#app h1")?.textContent||"Amb o sense")+" · Amb o sense");
   $$(".top nav a").forEach(a=>{if(a.dataset.nav===cur)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+  tornaTest(cur);
   if(h[0]==="tema"&&h[2]){const el=$("#q-"+h[2]);if(el){el.scrollIntoView();$("#h-"+h[2]).focus({preventScroll:true});return;}}
   window.scrollTo(0,0);
   const f=$("#app h1");if(f)f.focus({preventScroll:true});
@@ -647,6 +660,8 @@ document.addEventListener("submit",e=>{
 });
 document.addEventListener("toggle",e=>{if(e.target.matches&&e.target.matches("details.explica,details.more")&&e.target.open){S.us.detall++;save();}},true);
 document.addEventListener("click",e=>{
+  const sortida=e.target.closest(".test-page a[href^='#/tema/'], .test-page a[href^='#/q/']");
+  if(sortida&&S.test.tanda){S.test.tornar=true;save();}
   const src=e.target.closest("[data-src]");if(src){openSrc(src.dataset.src);return;}
   const a=e.target.closest("[data-act]");if(!a)return;
   const act=a.dataset.act, qid=a.dataset.q;
@@ -662,7 +677,8 @@ document.addEventListener("click",e=>{
   else if(act==="treu"){delete S.tria[qid];save();rerender();anuncia("Tria treta.");}
   else if(act==="serie-nova"){S.flux.actual=null;serieActual();nextInFlow("Sèrie nova. Pregunta 1 de 5.");}
   else if(act==="share"){const u=location.href.split("#")[0]+"#/q/"+qid;copy(u);}
-  else if(act==="test-start"){const mode=a.dataset.mode;S.test.tanda={mode,items:triaTanda(mode),pos:0};save();if(location.hash==="#/test/joc")rerender(false);else location.hash="#/test/joc";}
+  else if(act==="torna-tanca"){S.test.tornar=false;save();$("#torna-test")?.remove();}
+  else if(act==="test-start"){const mode=a.dataset.mode;S.test.tornar=false;S.test.tanda={mode,items:triaTanda(mode),pos:0};save();if(location.hash==="#/test/joc")rerender(false);else location.hash="#/test/joc";}
   else if(act==="test-resp"){
     const T=S.test,td=T.tanda;if(!td)return;const x=td.items[td.pos];if(!x||x.ans!==null)return;
     const v=+a.dataset.v,Q=D.test[x.tema][x.i];x.ans=v;T.vistes[tkey(x.tema,x.i)]=true;
