@@ -1146,3 +1146,4 @@ details.more[open] summary::after{content:"−"}
 .exp-orig{font-size:13px;color:var(--text2);margin:12px 0 0}
 details.more .exp-orig{margin:0 0 12px}
 .exp-scen .resp+.resp,.more-scen .resp+.resp{margin-top:10px}
+.src-tipus{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:18px 0 8px}
