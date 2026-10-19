@@ -1141,3 +1141,8 @@ details.more[open] summary::after{content:"−"}
 .serie-list li:hover a{text-decoration:underline}
 .serie-fl{font-size:26px;line-height:1;color:var(--text2);text-align:right}
 @media(max-width:699px){.serie-list li{min-height:64px}.serie-list a{font-size:16px}}
+
+/* V4.2 · «Explica-m'ho» mostra el quadre comparatiu; el panell de fonts, només el text de l'Acord */
+.exp-orig{font-size:13px;color:var(--text2);margin:12px 0 0}
+details.more .exp-orig{margin:0 0 12px}
+.exp-scen .resp+.resp,.more-scen .resp+.resp{margin-top:10px}

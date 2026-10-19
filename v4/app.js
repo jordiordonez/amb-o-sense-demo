@@ -69,24 +69,27 @@ const topicIcon = id=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 /* ---------- Components de lectura ---------- */
 const tab = s=>s.taula?`<table class="minitab"><caption>${esc(s.taula.titol)}</caption><tbody>${s.taula.files.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("")}</tbody></table><p class="note-src">${esc(s.taula.nota)}</p>`:"";
-function responseBody(s){
-  const quals = s.qual.map(x=>`<div class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</div>`).join("");
-  return `<p class="resp">${esc(s.text)}</p>${tab(s)}${quals}<div class="tags" aria-label="Naturalesa de la informació">${s.naturalesa.map(n=>`<span class="tag nat">${esc(n)}</span>`).join("")}</div>`;
-}
+/* Fonts: el quadre comparatiu de la Secretaria d'Estat és l'explicació llarga («Explica-m'ho»), sense
+   modificar; el panell de fonts només mostra el text oficial de l'Acord (Acord marc, Protocol, annexos,
+   declaracions). Les publicacions divulgatives (dossier, guia, infografia, anàlisi) no s'hi mostren. */
+const quadreDe = s=>s.fonts.filter(f=>f.doc==="quadre");
+const oficials = s=>s.fonts.filter(f=>D.docs[f.doc].naturalesa==="Previsió del text");
+const teFont = q=>SIDES.some(s=>oficials(q[s]).length);
+const pendent = q=>q.pendent||(!oficials(q.amb).length?"Referència al text de l'Acord pendent de localitzar.":"");
+const explicacio = s=>`${quadreDe(s).map(f=>`<p class="resp">${esc(f.text)}</p>`).join("")}${tab(s)}`;
+const origen = `<p class="exp-orig">Text del quadre comparatiu per àmbits temàtics de la Secretaria d'Estat, sense modificar.</p>`;
 /* Primer nivell: resposta breu i condicions decisives. Les condicions no s'amaguen mai al detall. */
 function essential(s){
   return `<p class="resp">${esc(s.breu||s.text)}</p>${s.qual.map(x=>`<p class="qual"><b>${esc(x.tipus)}</b>${esc(x.text)}</p>`).join("")}`;
 }
 /* Capçalera d'escenari: nom i subtítol, el mateix tractament als dos costats. */
 const scenHead = (side,tag="h3",cls="scen-h")=>`<${tag} class="${cls}">${glyph(side)}<span>${SC[side]}<small class="scen-sub">${SUB[side]}</small></span></${tag}>`;
-/* Un sol botó de font per pregunta: el panell mostra els fragments dels dos escenaris. */
-const srcBtn = (q,{label="Mira la font",cls="btn sec srcbtn"}={})=>`<button class="${cls}" data-src="${q.id}">${label}<span class="sr">: ${esc(q.pregunta)}</span></button>`;
-/* Més detall: el text complet (si és diferent de la frase resum), les taules, la naturalesa
-   de la informació i els avisos de referència pendent. Si no hi ha res més, no es mostra. */
+/* Un sol botó de font per pregunta: el panell mostra el text de l'Acord dels dos escenaris.
+   Si encara no s'ha localitzat cap referència a l'Acord, no hi ha botó. */
+const srcBtn = (q,{label="Mira el text de l'Acord",cls="btn sec srcbtn"}={})=>!teFont(q)?"":`<button class="${cls}" data-src="${q.id}">${label}<span class="sr">: ${esc(q.pregunta)}</span></button>`;
+/* Més detall (temes): el text del quadre comparatiu i les taules dels dos escenaris. */
 function mesDetall(q){
-  const sides=SIDES.filter(s=>q[s].breu||q[s].taula);
-  if(!sides.length&&!q.pendent) return "";
-  return `<details class="more"><summary>Més detall</summary><div class="more-body">${SIDES.map(s=>`<section class="more-scen">${scenHead(s)}${q[s].breu?`<p>${esc(q[s].text)}</p>`:""}${tab(q[s])}<div class="tags" aria-label="Naturalesa de la informació">${q[s].naturalesa.map(n=>`<span class="tag nat">${esc(n)}</span>`).join("")}</div>${s==="amb"&&q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}</section>`).join("")}</div></details>`;
+  return `<details class="more"><summary>Més detall</summary><div class="more-body">${SIDES.map(s=>`<section class="more-scen">${scenHead(s)}${explicacio(q[s])}${s==="amb"&&pendent(q)?`<p class="pendent-src">${esc(pendent(q))}</p>`:""}</section>`).join("")}</div>${origen}</details>`;
 }
 
 /* Tria: dos botons iguals. Mai preseleccionats; la tria es pot canviar o treure. */
@@ -99,11 +102,11 @@ function choiceRow(q,{flow=false}={}){
   </div>`;
 }
 function explica(q){
-  const side=s=>`<section class="exp-scen">${scenHead(s)}${responseBody(q[s])}${s==="amb"&&q.pendent?`<p class="pendent-src">${esc(q.pendent)}</p>`:""}</section>`;
-  return `<details class="explica" data-q="${q.id}"><summary>Explica-m'ho <span class="small">· text complet i font</span></summary><div class="exp-body">
+  const side=s=>`<section class="exp-scen">${scenHead(s)}${explicacio(q[s])}${s==="amb"&&pendent(q)?`<p class="pendent-src">${esc(pendent(q))}</p>`:""}</section>`;
+  return `<details class="explica" data-q="${q.id}"><summary>Explica-m'ho</summary><div class="exp-body">
     <div class="exp-pair">${SIDES.map(side).join("")}</div>
     ${q.mante?`<p class="mante"><b>Què es mantindria</b>${esc(q.mante)}</p>`:""}
-    <p class="exp-src">${srcBtn(q)}</p></div></details>`;
+    ${origen}${teFont(q)?`<p class="exp-src">${srcBtn(q)}</p>`:""}</div></details>`;
 }
 /* Fitxa de lectura dels temes: frase resum dels dos escenaris, «Més detall» i la font. Sense tria:
    la valoració només es fa al recorregut «Amb o sense», amb preguntes a l'atzar. */
@@ -311,8 +314,8 @@ P.balanc = ()=>{
       :`<section class="card"><h2>Encara no has triat cap pregunta</h2><p>Comença amb una pregunta a l'atzar o obre un tema.</p><div class="actions"><a class="btn" href="#/">Comença</a><a class="btn sec" href="#/temes">Tria un tema</a></div></section>`}
     ${ordre.length?`<section class="respostes" aria-labelledby="resp-h"><h2 id="resp-h">Les teves respostes</h2><p class="small muted">Obre una pregunta per veure'n el detall i la font, o per canviar la tria.</p>
       ${ordre.map(id=>{const q=preg(id),t=S.tria[id];return `<details class="resp-item"><summary><span class="overline">${esc(tema(q.tema).nom)}</span><span class="resp-q">${esc(q.pregunta)}</span><b class="tria-tag ${t}">${SC[t]}</b></summary><div class="resp-body">
-        <div class="exp-pair">${SIDES.map(s=>`<section class="exp-scen">${scenHead(s)}${responseBody(q[s])}</section>`).join("")}</div>
-        <p class="exp-src">${srcBtn(q)}</p>
+        <div class="exp-pair">${SIDES.map(s=>`<section class="exp-scen">${scenHead(s)}${essential(q[s])}</section>`).join("")}</div>
+        ${explica(q)}
         ${choiceRow(q)}</div></details>`;}).join("")}</section>`:""}
     <div class="actions no-print"><a class="btn" href="#/">${S.flux.actual&&S.flux.actual.pos<S.flux.actual.ids.length?"Continua la sèrie":"Més preguntes"}</a><button class="btn link" data-act="esborra">Esborra-ho tot</button></div>
   </div>`;
@@ -409,13 +412,13 @@ function tornaTest(cur){
 
 /* ---------- Pàgines informatives ---------- */
 P.nocanvia = ()=>`<div class="wrap narrow"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Què no canvia, amb o sense Acord</h1><p>Elements que el quadre comparatiu descriu com a iguals en tots dos escenaris.</p></div>
-  <div class="card"><ul class="list" style="margin:0">${D.nocanvia.items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul><button class="btn sec" data-src="nocanvia">Consulta la font</button></div></div>`;
+  <div class="card"><ul class="list" style="margin:0">${D.nocanvia.items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul><p class="exp-orig">Segons el quadre comparatiu per àmbits temàtics de la Secretaria d'Estat.</p></div></div>`;
 P.fonts = ()=>{
-  const usats=new Set(D.preguntes.flatMap(q=>SIDES.flatMap(s=>q[s].fonts.map(f=>f.doc))));
+  const usats=new Set(D.preguntes.flatMap(q=>SIDES.flatMap(s=>[...quadreDe(q[s]),...oficials(q[s])].map(f=>f.doc))));
   return `<div class="wrap narrow"><div class="pagehead"><div class="crumbs"><a href="#/">Inici</a></div><h1 tabindex="-1">Fonts i metodologia</h1><p>D'on surt cada frase, i com es llegeix.</p></div>
   <div class="card"><h2>Documents de referència</h2><ul class="list">${Object.entries(D.docs).filter(([k])=>usats.has(k)).map(([,d])=>`<li><b>${esc(d.nom)}.</b> ${esc(d.autor)}. ${esc(d.versio)}${d.fitxer?` <a href="${esc(d.fitxer)}" target="_blank" rel="noopener">Obre el PDF</a>`:""}</li>`).join("")}</ul></div>
-  <div class="card"><h2>Què vol dir cada etiqueta</h2><dl class="gloss" style="margin:0"><dt>Previsió del text</dt><dd>El que diu l'articulat de l'Acord.</dd><dt>Explicació institucional</dt><dd>La lectura del Govern sobre què implica, segons el quadre comparatiu.</dd><dt>Condició · Termini · Excepció · Incertesa</dt><dd>Matisos que canvien com s'ha de llegir una resposta. Es mostren sempre al costat de la resposta.</dd></dl></div>
-  <div class="card"><h2>Com es redacten els resums</h2><ul class="list" style="margin:0"><li>Cada resum correspon a un fragment identificat del quadre comparatiu.</li><li>Cada resposta té dues versions: una de breu, per a la primera lectura, i el text complet, a «Explica-m'ho».</li><li>La mateixa terminologia per als dos escenaris, i cap adjectiu valoratiu.</li><li>Els resums els proposa l'equip del projecte i els valida la Secretaria d'Estat per a les Relacions amb la UE.</li><li>Estat: <b>esborrany pendent de validació</b>. Última revisió: ${esc(D.revisio)}.</li></ul></div>
+  <div class="card"><h2>Què vol dir cada etiqueta</h2><dl class="gloss" style="margin:0"><dt>Condició · Termini · Excepció · Incertesa</dt><dd>Matisos que canvien com s'ha de llegir una resposta. Es mostren sempre al costat de la resposta.</dd></dl></div>
+  <div class="card"><h2>Com es redacten els resums</h2><ul class="list" style="margin:0"><li>La frase resum de cada escenari la redacta l'equip del projecte a partir del quadre comparatiu per àmbits temàtics de la Secretaria d'Estat.</li><li>«Explica-m'ho» mostra el text del quadre comparatiu, sense modificar.</li><li>«Mira el text de l'Acord» obre els articles, annexos i declaracions de l'Acord en què es basa la resposta. Si encara no s'ha localitzat la referència, s'indica.</li><li>La mateixa terminologia per als dos escenaris, i cap adjectiu valoratiu.</li><li>Els resums els proposa l'equip del projecte i els valida la Secretaria d'Estat per a les Relacions amb la UE.</li><li>Estat: <b>esborrany pendent de validació</b>. Última revisió: ${esc(D.revisio)}.</li></ul></div>
   <div class="card"><h2>Com es trien les preguntes</h2><ul class="list" style="margin:0"><li>Les preguntes surten a l'atzar, en sèries de 5, de temes diferents sempre que es pugui.</li><li>A les dues primeres sèries, com a mínim 2 de cada 5 són dels temes que més preocupen: habitatge, economia, fiscalitat, sobirania, i immigració i seguretat.</li><li>Les preguntes on els dos escenaris coincideixen no es demanen: les trobaràs als temes.</li><li>El balanç és un recompte: totes les tries compten igual.</li></ul></div></div>`;
 };
 
@@ -475,13 +478,12 @@ P.nf = ()=>`<div class="wrap narrow"><h1 tabindex="-1">Aquesta pàgina no existe
 
 /* ---------- Panell de fonts ---------- */
 let lastFocus=null;
-/* Panell de la font: una pregunta, els fragments agrupats per escenari (sense Acord primer).
+/* Panell de la font: una pregunta, el text de l'Acord agrupat per escenari (sense Acord primer).
+   A la pràctica només l'escenari «Amb Acord» cita l'Acord.
    L'autor i la versió de cada document surten una sola vegada, al final. */
 function openSrc(key){
-  let grups,title;
-  if(key==="nocanvia"){grups=[{side:null,frags:D.nocanvia.fonts}];title="Què no canvia, amb o sense Acord";}
-  else{const q=preg(key);if(!q)return;grups=SIDES.map(side=>({side,frags:q[side].fonts}));title=q.pregunta;}
-  grups=grups.filter(g=>g.frags.length);
+  const q=preg(key);if(!q||!teFont(q))return;
+  const grups=SIDES.map(side=>({side,frags:oficials(q[side])})).filter(g=>g.frags.length), title=q.pregunta;
   S.us.fonts++;save();
   lastFocus=document.activeElement;
   const docs=[...new Set(grups.flatMap(g=>g.frags.map(f=>f.doc)))].map(k=>D.docs[k]);
@@ -493,9 +495,9 @@ function openSrc(key){
       <p class="flink">${d.fitxer?`<a href="${esc(d.fitxer)}${f.page?"#page="+f.page:""}" target="_blank" rel="noopener">Obre el document${f.page?" a la pàgina "+f.page:""} ${arrow}</a>`:"Document de treball de la Secretaria d'Estat. A la versió pública s'enllaçarà la versió publicada."}</p></div>`;};
   const html=`<div class="scrim" data-act="close-src"></div>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="src-t">
-    <header><h2 id="src-t">Font</h2><button class="btn sec" data-act="close-src">Torna a la pregunta</button></header>
+    <header><h2 id="src-t">Text de l'Acord</h2><button class="btn sec" data-act="close-src">Torna a la pregunta</button></header>
     <div class="body"><p class="src-q">${esc(title)}</p>
-    <div class="src-grups${grups.length>1?" dues":""}">${grups.map(g=>`<section class="src-grup">${g.side?scenHead(g.side,"h3","src-side"):""}${g.frags.map(frag).join("")}</section>`).join("")}</div>
+    <div class="src-grups${grups.length>1?" dues":""}">${grups.map(g=>`<section class="src-grup">${scenHead(g.side,"h3","src-side")}${g.frags.map(frag).join("")}</section>`).join("")}</div>
     <section class="src-docs"><h3>Documents citats</h3><ul>${docs.map(d=>`<li><b>${esc(d.nom)}</b> · ${esc(d.autor)}. ${esc(d.versio)}</li>`).join("")}</ul></section>
     <p class="who">Fragment de la font: text original, sense modificar.<br>Resum redactat per l'equip del projecte · Validació de la Secretaria d'Estat: pendent · Revisat el ${esc(D.revisio)}. <a href="#/fonts">Fonts i metodologia</a></p>
     </div></div>`;
